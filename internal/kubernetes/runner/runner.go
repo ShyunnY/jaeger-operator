@@ -11,7 +11,8 @@ import (
 
 type Config struct {
 	config.Server
-	IrMessage *message.IRMessage
+	IrMessage   *message.IRMessage
+	StatusIRMap *message.StatusIRMaps
 }
 
 type Runner struct {
@@ -27,10 +28,10 @@ func (r *Runner) Name() string {
 }
 
 func (r *Runner) Start(ctx context.Context) error {
-	r.Logger = r.Logger.WithValues("runner", r.Name())
+	r.Logger = r.Logger.WithName(r.Name()).WithValues("runner", r.Name())
 
 	// create kubernetes manager and controller
-	manager, err := kubernetes.New(r.Server, r.IrMessage)
+	manager, err := kubernetes.New(r.Server, r.IrMessage, r.StatusIRMap)
 	if err != nil {
 		r.Logger.Error(err, "failed to create kuberntes controller")
 		return err
@@ -41,6 +42,6 @@ func (r *Runner) Start(ctx context.Context) error {
 			r.Logger.Error(err, "wrong shutdown of manager")
 		}
 	}()
-
+	r.Logger.Info("controller started")
 	return nil
 }

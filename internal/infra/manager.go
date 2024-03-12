@@ -2,8 +2,12 @@ package infra
 
 import (
 	"context"
+	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
 	"github.com/ShyunnY/jaeger-operator/internal/message"
+	"github.com/ShyunnY/jaeger-operator/internal/status"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -11,25 +15,32 @@ type Manager struct {
 	logger      logging.Logger
 	cli         client.Client
 	infraClient Client
+	StatusIRMap *message.StatusIRMaps
 }
 
-func NewManager(cli client.Client, logger logging.Logger) *Manager {
+func NewManager(cli client.Client, logger logging.Logger, StatusIRMap *message.StatusIRMaps) *Manager {
 	return &Manager{
 		cli:         cli,
 		logger:      logger,
 		infraClient: Client{Client: cli},
+		StatusIRMap: StatusIRMap,
 	}
 }
 
 func (m *Manager) BuildInfraResources(ctx context.Context, infraIR *message.InfraIR) error {
 
-	// TODO: 如果计算出错, 我们需要进行condition发布
+	nsName := types.NamespacedName{
+		Name:      infraIR.InstanceName,
+		Namespace: infraIR.InstanceNamespace,
+	}
 
 	ic := InventoryComputer{
 		namespace:    infraIR.InstanceNamespace,
 		instanceName: infraIR.InstanceName,
 		cli:          m.cli,
 	}
+	condJaeger := new(jaegerv1a1.Jaeger)
+	condJaeger.Status.Phase = "Failed"
 
 	// create service account
 	if saObj, err := ic.ComputeServiceAccount(ctx, infraIR.ServiceAccount); err != nil {
@@ -42,7 +53,7 @@ func (m *Manager) BuildInfraResources(ctx context.Context, infraIR *message.Infr
 		}); err != nil {
 			m.logger.Error(err, "failed to create or update ServiceAccount")
 
-			return err
+			status.SetJaegerCondition(condJaeger, "Error", metav1.ConditionFalse, "Infra", "failed to create or update ServiceAccount")
 		}
 	}
 
@@ -57,7 +68,7 @@ func (m *Manager) BuildInfraResources(ctx context.Context, infraIR *message.Infr
 		}); err != nil {
 			m.logger.Error(err, "failed to create or update Deployment")
 
-			return err
+			status.SetJaegerCondition(condJaeger, "Error", metav1.ConditionFalse, "Infra", "failed to create or update Deployment")
 		}
 	}
 
@@ -72,9 +83,15 @@ func (m *Manager) BuildInfraResources(ctx context.Context, infraIR *message.Infr
 		}); err != nil {
 			m.logger.Error(err, "failed to create or update Service")
 
-			return err
+			status.SetJaegerCondition(condJaeger, "Error", metav1.ConditionFalse, "Infra", "failed to create or update Services")
 		}
 	}
 
+	if condJaeger.Status.Conditions == nil || len(condJaeger.Status.Conditions) == 0 {
+		condJaeger.Status.Phase = "Success"
+		status.SetJaegerCondition(condJaeger, "Success", metav1.ConditionTrue, "Infra", "success to manager infra resource")
+	}
+
+	m.StatusIRMap.Store(nsName, &condJaeger.Status)
 	return nil
 }

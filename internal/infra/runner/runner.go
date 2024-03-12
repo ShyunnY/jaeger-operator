@@ -39,7 +39,7 @@ func (r *Runner) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	r.Manager = infra.NewManager(cli, r.Logger)
+	r.Manager = infra.NewManager(cli, r.Logger, r.StatusMap)
 	go r.subscriptionInfraResource(ctx)
 
 	r.Logger.Info("infra manager started")

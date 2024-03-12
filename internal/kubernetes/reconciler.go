@@ -23,19 +23,21 @@ type jaegerReconciler struct {
 	name       string
 	namespaces set.Set[string]
 
-	logger    logging.Logger
-	client    client.Client
-	irMessage *message.IRMessage
+	logger       logging.Logger
+	client       client.Client
+	irMessage    *message.IRMessage
+	statusIRMaps *message.StatusIRMaps
 }
 
-func NewJaegerController(cfg config.Server, mgr manager.Manager, jaegerIR *message.IRMessage) error {
+func NewJaegerController(cfg config.Server, mgr manager.Manager, jaegerIR *message.IRMessage, statusIRMaps *message.StatusIRMaps) error {
 
 	r := &jaegerReconciler{
-		logger:     cfg.Logger,
-		namespaces: cfg.NamespaceSet,
-		client:     mgr.GetClient(),
-		name:       cfg.JaegerOperatorName,
-		irMessage:  jaegerIR,
+		logger:       cfg.Logger,
+		namespaces:   cfg.NamespaceSet,
+		client:       mgr.GetClient(),
+		name:         cfg.JaegerOperatorName,
+		irMessage:    jaegerIR,
+		statusIRMaps: statusIRMaps,
 	}
 
 	c, err := controller.New("jaeger-reconciler", mgr, controller.Options{Reconciler: r})

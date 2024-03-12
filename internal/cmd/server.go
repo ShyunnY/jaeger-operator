@@ -10,6 +10,7 @@ import (
 	infrarunner "github.com/ShyunnY/jaeger-operator/internal/infra/runner"
 	kubernetesrunner "github.com/ShyunnY/jaeger-operator/internal/kubernetes/runner"
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
+	statusrunner "github.com/ShyunnY/jaeger-operator/internal/status/runner"
 	translaterunner "github.com/ShyunnY/jaeger-operator/internal/translate/runner"
 )
 
@@ -65,7 +66,10 @@ func setRunners(cfg *config.Server) error {
 
 	ctx := ctrl.SetupSignalHandler()
 
+	// init IRs
 	irMessage := new(message.IRMessage)
+	infraIRs := new(message.InfraIRMaps)
+	statusIRs := new(message.StatusIRMaps)
 
 	// 1. kubernetes controller runner
 	k8sRunner := kubernetesrunner.New(&kubernetesrunner.Config{
@@ -77,8 +81,6 @@ func setRunners(cfg *config.Server) error {
 	}
 
 	// 2. translator runner
-	infraIRs := new(message.InfraIRMaps)
-	statusIRs := new(message.StatusIRMaps)
 	translatorRunner := translaterunner.New(&translaterunner.Config{
 		Server:      *cfg,
 		InfraIRMap:  infraIRs,
@@ -96,6 +98,15 @@ func setRunners(cfg *config.Server) error {
 		StatusMap: statusIRs,
 	})
 	if err := infraRunner.Start(ctx); err != nil {
+		return err
+	}
+
+	// 4. status handler runner
+	statusRunner := statusrunner.New(&statusrunner.Config{
+		Server:      *cfg,
+		StatusIRMap: statusIRs,
+	})
+	if err := statusRunner.Start(ctx); err != nil {
 		return err
 	}
 

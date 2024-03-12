@@ -2,22 +2,81 @@ package runner
 
 import (
 	"context"
+	"fmt"
+	"github.com/ShyunnY/jaeger-operator/internal/config"
+	"github.com/ShyunnY/jaeger-operator/internal/jaeger"
+	"github.com/ShyunnY/jaeger-operator/internal/message"
+	"github.com/ShyunnY/jaeger-operator/internal/status"
+	"github.com/telepresenceio/watchable"
+	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 )
 
 type Config struct {
+	config.Server
+	StatusIRMap *message.StatusIRMaps
 }
 
 type Runner struct {
 	Config
+	*status.UpdateHandler
 }
 
-func (r *Runner) WithName() string {
+func (r *Runner) Name() string {
 	return jaegerv1a1.StatusComponent
 }
 
-func (r *Runner) Start(ctx context.Context) error {
+func New(cfg *Config) Runner {
+	return Runner{
+		Config: *cfg,
+	}
+}
 
+func (r *Runner) Start(ctx context.Context) error {
+	r.Logger = r.Logger.WithName(r.Name()).WithValues("runner", r.Name())
+	restConfig := ctrl.GetConfigOrDie()
+
+	cli, err := client.New(restConfig, client.Options{Scheme: jaeger.GetScheme()})
+	if err != nil {
+		return err
+	}
+	r.UpdateHandler = status.NewUpdateHandler(cli, r.Logger)
+	go r.UpdateHandler.Start(ctx)
+	go r.subscribeStatus(ctx)
+
+	r.Logger.Info("status handler started")
 	return nil
+}
+
+func (r *Runner) subscribeStatus(ctx context.Context) {
+
+	message.SubscriptionIR(
+		r.StatusIRMap.Map.Subscribe(ctx),
+		func(update watchable.Update[types.NamespacedName, *jaegerv1a1.JaegerStatus], errCh chan error) {
+			r.Logger.Info("status handler takes the ir instance and handler it", "instance", update.Key.String())
+
+			if update.Delete {
+				// TODO: handler error
+			}
+
+			r.UpdateHandler.Write(status.Update{
+				NamespacedName: update.Key,
+				Object:         new(jaegerv1a1.Jaeger),
+				Mutator: func(oldObj client.Object) client.Object {
+					obj, ok := oldObj.(*jaegerv1a1.Jaeger)
+					if !ok {
+						errCh <- fmt.Errorf("unsupported object type %T", obj)
+					}
+					dp := obj.DeepCopy()
+					dp.Status.Conditions = status.MergeCondition(dp.Status.Conditions, update.Value.Conditions...)
+					dp.Status.Phase = update.Value.Phase
+					return dp
+				},
+			})
+
+		})
+
 }

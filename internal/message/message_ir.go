@@ -5,6 +5,7 @@ import (
 	"github.com/telepresenceio/watchable"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type IRMessage struct {
@@ -59,5 +60,5 @@ func (ir *InfraIR) AddResources(obj any) {
 }
 
 type StatusIRMaps struct {
-	watchable.Map[string, *jaegerv1a1.JaegerStatus]
+	watchable.Map[types.NamespacedName, *jaegerv1a1.JaegerStatus]
 }

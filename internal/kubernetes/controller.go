@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-func New(cfg config.Server, irMessage *message.IRMessage) (manager.Manager, error) {
+func New(cfg config.Server, irMessage *message.IRMessage, statusIRMaps *message.StatusIRMaps) (manager.Manager, error) {
 
 	ctrl.SetLogger(cfg.Logger.Logger)
 
@@ -44,7 +44,7 @@ func New(cfg config.Server, irMessage *message.IRMessage) (manager.Manager, erro
 	}
 
 	// setup core reconcile controller
-	if err = NewJaegerController(cfg, mgr, irMessage); err != nil {
+	if err = NewJaegerController(cfg, mgr, irMessage, statusIRMaps); err != nil {
 		return nil, err
 	}
 

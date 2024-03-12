@@ -5,7 +5,10 @@ import (
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
 	"github.com/ShyunnY/jaeger-operator/internal/message"
+	"github.com/ShyunnY/jaeger-operator/internal/status"
 	"github.com/ShyunnY/jaeger-operator/internal/utils"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type Translator struct {
@@ -21,7 +24,7 @@ type Translator struct {
 func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 
 	infraIR := new(message.InfraIR)
-
+	instance.Status.Phase = "Failed"
 	if instance.Spec.Type == "" {
 		infraIR.Strategy = string(jaegerv1a1.AllInOneType)
 	} else {
@@ -58,7 +61,8 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 		t.Logger.Error(err, "failed to render service account resource",
 			"instance", instance.Name,
 		)
-		return err
+
+		status.SetJaegerCondition(instance, "Error", metav1.ConditionFalse, "Translate", "failed to render service account resource")
 	} else {
 		infraIR.AddResources(sa)
 	}
@@ -67,7 +71,8 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 		t.Logger.Error(err, "failed to render configmap resource",
 			"instance", instance.Name,
 		)
-		return nil
+
+		status.SetJaegerCondition(instance, "Error", metav1.ConditionFalse, "Translate", "failed to render configmap resource")
 	} else {
 		infraIR.AddResources(cm)
 	}
@@ -76,7 +81,8 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 		t.Logger.Error(err, "failed to render deployment resource",
 			"instance", instance.Name,
 		)
-		return nil
+
+		status.SetJaegerCondition(instance, "Error", metav1.ConditionFalse, "Translate", "failed to render deployment resource")
 	} else {
 		infraIR.AddResources(deploy)
 	}
@@ -86,12 +92,22 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 		t.Logger.Error(err, "failed to render service resource",
 			"instance", instance.Name,
 		)
-		return nil
+
+		status.SetJaegerCondition(instance, "Error", metav1.ConditionFalse, "Translate", "failed to render deployment resource")
 	} else if len(services) != 0 {
 		infraIR.AddResources(services)
 	}
 
-	t.InfraIRMap.Store(instance.Name, infraIR)
+	if instance.Status.Conditions == nil || len(instance.Status.Conditions) == 0 {
+		status.SetJaegerCondition(instance, "Success", metav1.ConditionTrue, "Translate", "success to translate resource")
+		instance.Status.Phase = "Success"
+	}
 
+	// push ir
+	t.InfraIRMap.Store(instance.Name, infraIR)
+	t.StatusIRMap.Map.Store(types.NamespacedName{
+		Namespace: instance.Namespace,
+		Name:      instance.Name,
+	}, &instance.Status)
 	return nil
 }

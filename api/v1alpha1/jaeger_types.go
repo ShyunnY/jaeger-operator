@@ -51,12 +51,16 @@ type JaegerSpec struct {
 // JaegerStatus defines the observed state of Jaeger
 type JaegerStatus struct {
 
+	// Phase Define the component phase of Jaeger
+	Phase string `json:"phase"`
+
 	// Conditions  Define the conditions of Jaeger
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase",description="Jaeger instance's status"
 
 // Jaeger is the Schema for the jaegers API
 type Jaeger struct {
