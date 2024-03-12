@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: all-in-one-default-dec10161
+  namespace: default
+  uid: ""
+  labels:
+    app: jaeger
+    app.kubernetes.io/component: deployment
+    app.kubernetes.io/managed-by: jaeger-operator
+    app.kubernetes.io/name: all-in-one
+    app.kubernetes.io/part-of: jaeger
+    tracing.orange.io/strategy: allInOne
+  ownerReferences:
+    - apiVersion: tracing.orange.io/v1alpha1
+      kind: Jaeger
+      name: all-in-one
+      uid: a98d5c73-8656-4035-be2f-0930f58bc89d
+      controller: true
+      blockOwnerDeletion: null
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger
+      app.kubernetes.io/component: pod
+      app.kubernetes.io/managed-by: jaeger-operator
+      app.kubernetes.io/name: all-in-one
+      app.kubernetes.io/part-of: jaeger
+      tracing.orange.io/strategy: allInOne
+  template:
+    metadata:
+      labels:
+        app: jaeger
+        app.kubernetes.io/component: pod
+        app.kubernetes.io/managed-by: jaeger-operator
+        app.kubernetes.io/name: all-in-one
+        app.kubernetes.io/part-of: jaeger
+        tracing.orange.io/strategy: allInOne
+    spec:
+      ServiceAccountName: all-in-one-default-dec10161
+      containers:
+        - name: jaeger
+          image: jaegertracing/all-in-one:1.54.0
+          ports:
+            - name: zk-compact-trft
+              hostPort: 0
+              containerPort: 5775
+              protocol: UDP
+              hostIP: ""
+            - name: config-rest
+              hostPort: 0
+              containerPort: 5778
+              protocol: ""
+              hostIP: ""
+            - name: jg-compact-trft
+              hostPort: 0
+              containerPort: 6831
+              protocol: UDP
+              hostIP: ""
+            - name: jg-binary-trft
+              hostPort: 0
+              containerPort: 6832
+              protocol: UDP
+              hostIP: ""
+            - name: zipkin
+              hostPort: 0
+              containerPort: 9411
+              protocol: ""
+              hostIP: ""
+            - name: c-tchan-trft
+              hostPort: 0
+              containerPort: 14267
+              protocol: ""
+              hostIP: ""
+            - name: c-binary-trft
+              hostPort: 0
+              containerPort: 14268
+              protocol: ""
+              hostIP: ""
+            - name: grpc-query
+              hostPort: 0
+              containerPort: 16685
+              protocol: ""
+              hostIP: ""
+            - name: query
+              hostPort: 0
+              containerPort: 16686
+              protocol: ""
+              hostIP: ""
+            - name: admin-http
+              hostPort: 0
+              containerPort: 14269
+              protocol: ""
+              hostIP: ""
+            - name: grpc
+              hostPort: 0
+              containerPort: 14250
+              protocol: ""
+              hostIP: ""
+          env:
+            - name: SPAN_STORAGE_TYPE
+              value: memory
+            - name: METRICS_STORAGE_TYPE
+              value: ""
+            - name: COLLECTOR_ZIPKIN_HOST_PORT
+              value: :9411
+            - name: JAEGER_DISABLED
+              value: "true"

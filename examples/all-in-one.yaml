@@ -1,0 +1,7 @@
+apiVersion: tracing.orange.io/v1alpha1
+kind: Jaeger
+metadata:
+  name: all-in-one
+  namespace: default
+spec:
+  type: allInOne

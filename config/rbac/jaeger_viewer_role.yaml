@@ -1,0 +1,27 @@
+# permissions for end users to view jaegers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: jaeger-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: jaeger
+    app.kubernetes.io/part-of: jaeger
+    app.kubernetes.io/managed-by: kustomize
+  name: jaeger-viewer-role
+rules:
+- apiGroups:
+  - tracing.orange.io
+  resources:
+  - jaegers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - tracing.orange.io
+  resources:
+  - jaegers/status
+  verbs:
+  - get

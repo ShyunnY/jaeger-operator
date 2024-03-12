@@ -1,0 +1,12 @@
+apiVersion: tracing.orange.io/v1alpha1
+kind: Jaeger
+metadata:
+  labels:
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/instance: jaeger-sample
+    app.kubernetes.io/part-of: jaeger
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: jaeger
+  name: jaeger-sample
+spec:
+  # TODO(user): Add fields here
