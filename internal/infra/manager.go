@@ -30,17 +30,18 @@ func NewManager(cli client.Client, logger logging.Logger, StatusIRMap *message.S
 func (m *Manager) BuildInfraResources(ctx context.Context, infraIR *message.InfraIR) error {
 
 	nsName := types.NamespacedName{
-		Name:      infraIR.InstanceName,
-		Namespace: infraIR.InstanceNamespace,
+		Name:      infraIR.InstanceMedata.Name,
+		Namespace: infraIR.InstanceMedata.Namespace,
 	}
 
 	ic := InventoryComputer{
-		namespace:    infraIR.InstanceNamespace,
-		instanceName: infraIR.InstanceName,
+		namespace:    infraIR.InstanceMedata.Name,
+		instanceName: infraIR.InstanceMedata.Namespace,
 		cli:          m.cli,
 	}
 	condJaeger := new(jaegerv1a1.Jaeger)
 	condJaeger.Status.Phase = "Failed"
+	condJaeger.ObjectMeta = infraIR.InstanceMedata
 
 	// create service account
 	if saObj, err := ic.ComputeServiceAccount(ctx, infraIR.ServiceAccount); err != nil {

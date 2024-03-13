@@ -17,7 +17,8 @@ func SetJaegerCondition(instance *jaegerv1a1.Jaeger, t string, status metav1.Con
 }
 
 // MergeCondition
-// 给定一个conditions和updates, 如果updates中的condition与conditions中某些条件类型相同, 则进行更新
+// Given a conditions and updates, if the condition in updates is of the same type
+// as some condition in conditions, it is updated
 func MergeCondition(conditions []metav1.Condition, updates ...metav1.Condition) []metav1.Condition {
 
 	var additions []metav1.Condition
@@ -25,8 +26,13 @@ func MergeCondition(conditions []metav1.Condition, updates ...metav1.Condition) 
 	for i, update := range updates {
 		add := true
 		for j, condition := range conditions {
+
+			// Reason represents different components, if the same component publishes the same condition,
+			// we don't need to add additional conditions
 			if condition.Reason == update.Reason {
 				add = false
+
+				// We change condition to the latest
 				if conditionChange(condition, update) {
 					conditions[j].Status = update.Status
 					conditions[j].Reason = update.Reason
@@ -43,7 +49,8 @@ func MergeCondition(conditions []metav1.Condition, updates ...metav1.Condition) 
 		}
 	}
 
-	return additions
+	conditions = append(conditions, additions...)
+	return conditions
 }
 
 func newCondition(t string, status metav1.ConditionStatus, reason, msg string, lt time.Time, og int64) metav1.Condition {
@@ -59,7 +66,6 @@ func newCondition(t string, status metav1.ConditionStatus, reason, msg string, l
 
 func conditionChange(a, b metav1.Condition) bool {
 	return (a.Status != b.Status) ||
-		(a.Reason != b.Reason) ||
 		(a.Message != b.Message) ||
 		(a.ObservedGeneration != b.ObservedGeneration)
 }

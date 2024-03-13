@@ -5,6 +5,7 @@ import (
 	"github.com/telepresenceio/watchable"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -18,9 +19,8 @@ type InfraIRMaps struct {
 }
 
 type InfraIR struct {
-	InstanceName      string
-	InstanceNamespace string
-	Strategy          string
+	Strategy       string
+	InstanceMedata metav1.ObjectMeta
 
 	Deployment     *appsv1.Deployment
 	ConfigMap      *corev1.ConfigMap

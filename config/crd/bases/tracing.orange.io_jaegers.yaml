@@ -14,7 +14,12 @@ spec:
     singular: jaeger
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Jaeger instance's status
+      jsonPath: .status.phase
+      name: Status
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Jaeger is the Schema for the jaegers API
@@ -146,3 +151,5 @@ spec:
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}

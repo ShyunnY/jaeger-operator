@@ -8,6 +8,7 @@ import (
 	"github.com/ShyunnY/jaeger-operator/internal/message"
 	"github.com/ShyunnY/jaeger-operator/internal/status"
 	"github.com/telepresenceio/watchable"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -71,7 +72,9 @@ func (r *Runner) subscribeStatus(ctx context.Context) {
 						errCh <- fmt.Errorf("unsupported object type %T", obj)
 					}
 					dp := obj.DeepCopy()
-					dp.Status.Conditions = status.MergeCondition(dp.Status.Conditions, update.Value.Conditions...)
+
+					cond := sortConditions(status.MergeCondition(dp.Status.Conditions, update.Value.Conditions...))
+					dp.Status.Conditions = cond
 					dp.Status.Phase = update.Value.Phase
 					return dp
 				},
@@ -79,4 +82,14 @@ func (r *Runner) subscribeStatus(ctx context.Context) {
 
 		})
 
+}
+
+func sortConditions(conditions []metav1.Condition) []metav1.Condition {
+
+	retCond := make([]metav1.Condition, 0, len(conditions))
+	for i := len(conditions) - 1; i >= 0; i-- {
+		retCond = append(retCond, conditions[i])
+	}
+
+	return retCond
 }

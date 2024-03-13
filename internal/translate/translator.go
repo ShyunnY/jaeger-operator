@@ -35,8 +35,7 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 	mergeCommonLabels := utils.MergeCommonMap(instance.Labels, instance.Spec.CommonSpec.Metadata.Labels)
 	mergeCommonAnnotations := utils.MergeCommonMap(instance.Annotations, instance.Spec.CommonSpec.Metadata.Annotations)
 
-	infraIR.InstanceName = instance.Name
-	infraIR.InstanceNamespace = instance.Namespace
+	infraIR.InstanceMedata = instance.ObjectMeta
 
 	var strRender StrategyRender
 	switch infraIR.Strategy {
