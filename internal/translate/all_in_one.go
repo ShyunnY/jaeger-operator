@@ -1,12 +1,13 @@
 package translate
 
 import (
-	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
-	"github.com/ShyunnY/jaeger-operator/internal/utils"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
+	"github.com/ShyunnY/jaeger-operator/internal/utils"
 )
 
 type AllInOneRender struct {
@@ -152,8 +153,17 @@ func (r *AllInOneRender) Service() ([]*corev1.Service, error) {
 	queryService.Spec.Selector = selector
 	queryService.Labels = utils.MergeCommonMap(utils.Labels(r.instance.Name, "service", string(r.GetStrategy())), r.labels)
 	queryService.Annotations = r.annotations
+	services = append(services, queryService)
 
-	return append(services, queryService), nil
+	collectorServices := CollectorServices(r.instance)
+	for i := range collectorServices {
+		collectorServices[i].Spec.Selector = selector
+		collectorServices[i].Labels = utils.MergeCommonMap(utils.Labels(r.instance.Name, "service", string(r.GetStrategy())), r.labels)
+		collectorServices[i].Annotations = r.annotations
+	}
+	services = append(services, collectorServices...)
+
+	return services, nil
 }
 
 // ServiceAccount Returns the ServiceAccount of the expected AllInOne Strategy

@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: all-in-one-collect
+  namespace: default
+  ownerReferences:
+    - apiVersion: tracing.orange.io/v1alpha1
+      controller: true
+      kind: Jaeger
+      name: all-in-one
+      uid: a98d5c73-8656-4035-be2f-0930f58bc89d
+spec:
+  type: ClusterIP
+  ports:
+    - name: zipkin
+      port: 9411
+      protocol: TCP
+      targetPort: 9411
+    - name: grpc
+      port: 14250
+      protocol: TCP
+      targetPort: 14250
+    - name: c-tchan-trft
+      port: 14267
+      protocol: TCP
+      targetPort: 14267
+    - name: c-binary-trft
+      port: 14268
+      protocol: TCP
+      targetPort: 14268
