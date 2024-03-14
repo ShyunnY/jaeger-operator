@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"github.com/ShyunnY/jaeger-operator/internal/message"
-	"github.com/ShyunnY/jaeger-operator/internal/utils"
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -10,8 +8,10 @@ import (
 	infrarunner "github.com/ShyunnY/jaeger-operator/internal/infra/runner"
 	kubernetesrunner "github.com/ShyunnY/jaeger-operator/internal/kubernetes/runner"
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
+	"github.com/ShyunnY/jaeger-operator/internal/message"
 	statusrunner "github.com/ShyunnY/jaeger-operator/internal/status/runner"
 	translaterunner "github.com/ShyunnY/jaeger-operator/internal/translate/runner"
+	"github.com/ShyunnY/jaeger-operator/internal/utils"
 )
 
 const (
@@ -49,11 +49,16 @@ func server() error {
 		NamespaceSet:       utils.ExtractNamespace(namespace),
 	}
 
+	// running admin serve
+	if err := NewAdmin(cfg); err != nil {
+		return err
+	}
+
 	// TODO: tracing server
-	// TODO: admin serve
+
 	// TODO: metrics serve
 
-	// TODO: setRunners
+	// starting runners
 	if err := setRunners(cfg); err != nil {
 		return err
 	}

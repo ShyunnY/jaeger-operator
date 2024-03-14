@@ -9,7 +9,7 @@ const (
 	TranslatorComponent = "translator"
 
 	// StatusComponent Define the Status component
-	StatusComponent = "status"
+	StatusComponent = "status-manager"
 
 	// InfrastructureComponent Define the Infrastructure component
 	InfrastructureComponent = "infrastructure"

@@ -2,12 +2,13 @@ package kubernetes
 
 import (
 	"context"
-	"github.com/ShyunnY/jaeger-operator/internal/message"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/util/workqueue"
 	"k8s.io/utils/set"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -17,6 +18,7 @@ import (
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 	"github.com/ShyunnY/jaeger-operator/internal/config"
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
+	"github.com/ShyunnY/jaeger-operator/internal/message"
 )
 
 type jaegerReconciler struct {
@@ -109,22 +111,33 @@ func (r *jaegerReconciler) hasInWatchNamespace(object client.Object) bool {
 
 func (r *jaegerReconciler) watchResource(mgr manager.Manager, c controller.Controller) error {
 
-	// TODO: 我们不监听delete事件
-
 	predicates := []predicate.Predicate{
-		predicate.GenerationChangedPredicate{},
+		GenerationChanger{
+			GenerationChangedPredicate: predicate.GenerationChangedPredicate{},
+		},
 	}
+
 	if r.namespaces.Len() != 0 {
 		predicates = append(predicates, predicate.NewPredicateFuncs(r.hasInWatchNamespace))
 	}
 
 	if err := c.Watch(
 		source.Kind(mgr.GetCache(), &jaegerv1a1.Jaeger{}),
-		&handler.EnqueueRequestForObject{},
+		&EnqueueHandler{},
 		predicates...,
 	); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// EnqueueHandler
+// With custom EnqueueHandler, we don't handle delete cases, at least not for now
+type EnqueueHandler struct {
+	*handler.EnqueueRequestForObject
+}
+
+func (e *EnqueueHandler) Delete(ctx context.Context, evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
+	return
 }

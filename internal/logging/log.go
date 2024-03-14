@@ -2,6 +2,7 @@ package logging
 
 import (
 	"os"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
@@ -10,6 +11,7 @@ import (
 )
 
 type Logger struct {
+	level string
 	logr.Logger
 }
 
@@ -18,6 +20,7 @@ func NewLogger(level string) Logger {
 
 	logger := zapr.NewLogger(zap.New(initZapCore(level), zap.AddCaller()))
 	return Logger{
+		level:  level,
 		Logger: logger,
 	}
 }
@@ -34,8 +37,10 @@ func initZapCore(level string) zapcore.Core {
 	}
 
 	prodEncoderConfig := zap.NewProductionEncoderConfig()
-	prodEncoderConfig.TimeKey = "timestamp"
-	prodEncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	prodEncoderConfig.TimeKey = "ts"
+	prodEncoderConfig.EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+		enc.AppendString(t.Format(time.RFC3339))
+	}
 
 	core := zapcore.NewCore(
 		zapcore.NewJSONEncoder(prodEncoderConfig),
@@ -52,8 +57,8 @@ func (l Logger) WithValues(kvs ...any) Logger {
 }
 
 func (l Logger) WithName(name string) Logger {
-	logger := l.Logger.WithName(name)
 
+	logger := NewLogger(l.level).Logger.WithName(name)
 	return Logger{
 		Logger: logger,
 	}
