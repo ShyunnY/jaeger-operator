@@ -5,3 +5,11 @@ metadata:
   namespace: default
 spec:
   type: allInOne
+  components:
+    allInOne:
+      setting:
+        args:
+          - "--memory.max-traces=100"
+        envs:
+          - name: JAEGER_DISABLED
+            value: "true"

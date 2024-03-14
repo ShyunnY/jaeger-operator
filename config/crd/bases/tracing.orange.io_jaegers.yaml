@@ -47,19 +47,54 @@ spec:
               commonSpec:
                 properties:
                   metadata:
+                    description: CommonMetadata Defines Metadata common to all components
+                      and infrastructure resources
                     properties:
                       annotations:
                         additionalProperties:
                           type: string
+                        description: Annotations Define annotations setting for metadata
+                          on the resource
                         type: object
                       labels:
                         additionalProperties:
                           type: string
+                        description: Labels Define labels setting for metadata on
+                          the resource
                         type: object
                     type: object
                 type: object
               components:
                 description: Components Define the subComponents of Jaeger
+                properties:
+                  allInOne:
+                    description: AllInOne Define all-in-one Jaeger component
+                    properties:
+                      setting:
+                        description: ComponentSettings Defines common Settings between
+                          components
+                        properties:
+                          args:
+                            description: Args Defined cmd args for Jaeger components
+                            items:
+                              type: string
+                            type: array
+                          envs:
+                            description: Envs Defined env for Jaeger components
+                            items:
+                              properties:
+                                name:
+                                  description: Define Env name
+                                  minLength: 1
+                                  type: string
+                                value:
+                                  description: Define Env value
+                                  minLength: 1
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
+                    type: object
                 type: object
               type:
                 default: allInOne
@@ -143,6 +178,7 @@ spec:
                   type: object
                 type: array
               phase:
+                default: Unknown
                 description: Phase Define the component phase of Jaeger
                 type: string
             required:

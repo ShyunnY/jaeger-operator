@@ -20,26 +20,21 @@ type AllInOneRender struct {
 // Deployment Returns the Deployment of the expected AllInOne Strategy
 func (r *AllInOneRender) Deployment() (*appsv1.Deployment, error) {
 
-	envs := []corev1.EnvVar{
-		{
-			Name:  "SPAN_STORAGE_TYPE",
-			Value: "memory",
-		},
-		{
-			Name:  "METRICS_STORAGE_TYPE",
-			Value: "",
-		},
-		{
-			Name:  "COLLECTOR_ZIPKIN_HOST_PORT",
-			Value: ":9411",
-		},
-		{
-			Name:  "JAEGER_DISABLED",
-			Value: "true",
-		},
-	}
+	// merge Envs and Args
+	envs := utils.MergePodEnv(r.instance.Spec.Components.AllInOne.Envs...)
+	args := utils.MergePodArgs(r.instance.Spec.Components.AllInOne.Args...)
 
 	ports := []corev1.ContainerPort{
+		{
+			ContainerPort: oltpGrpcPort,
+			Name:          "oltp-grpc",
+			Protocol:      corev1.ProtocolTCP,
+		},
+		{
+			ContainerPort: oltpHTTPPort,
+			Name:          "oltp-http",
+			Protocol:      corev1.ProtocolTCP,
+		},
 		{
 			ContainerPort: 5775,
 			Name:          "zk-compact-trft",
@@ -80,7 +75,7 @@ func (r *AllInOneRender) Deployment() (*appsv1.Deployment, error) {
 			Name:          "query",
 		},
 		{
-			ContainerPort: 14269,
+			ContainerPort: adminPort,
 			Name:          "admin-http",
 		},
 		{
@@ -122,13 +117,12 @@ func (r *AllInOneRender) Deployment() (*appsv1.Deployment, error) {
 					// ImagePullSecrets: commonSpec.ImagePullSecrets,
 					Containers: []corev1.Container{
 						{
-							Image: "jaegertracing/all-in-one:1.54.0",
-							Name:  "jaeger",
-							// Args:  options,
-							// TODO: 需要添加otlp env/port
-							Env:   envs,
-							Ports: ports,
-							// LivenessProbe: livenessProbe,
+							Image:         "jaegertracing/all-in-one:1.54.0",
+							Name:          "jaeger",
+							Args:          args,
+							Env:           envs,
+							Ports:         ports,
+							LivenessProbe: livenessProbe(),
 						},
 					},
 					ServiceAccountName: r.Name(),

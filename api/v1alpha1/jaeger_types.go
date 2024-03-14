@@ -51,6 +51,7 @@ type JaegerSpec struct {
 // JaegerStatus defines the observed state of Jaeger
 type JaegerStatus struct {
 
+	// +kubebuilder:default=Unknown
 	// Phase Define the component phase of Jaeger
 	Phase string `json:"phase"`
 
@@ -80,17 +81,55 @@ type JaegerList struct {
 	Items           []Jaeger `json:"items"`
 }
 
+// JaegerComponent Defining individual components
 type JaegerComponent struct {
+
+	// AllInOne Define all-in-one Jaeger component
+	AllInOne AllInOneComponent `json:"allInOne,omitempty"`
 }
 
 type CommonSpec struct {
 	Metadata CommonMetadata `json:"metadata,omitempty"`
 }
 
+// CommonMetadata Defines Metadata common to all components and infrastructure resources
 type CommonMetadata struct {
+
+	// Labels Define labels setting for metadata on the resource
 	Labels map[string]string `json:"labels,omitempty"`
 
+	// Annotations Define annotations setting for metadata on the resource
 	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
+// AllInOneComponent Define the AllInOne Jaeger component under the type=allInOne
+type AllInOneComponent struct {
+	ComponentSettings `json:"setting,omitempty"`
+}
+
+// ComponentSettings Defines common Settings between components
+type ComponentSettings struct {
+
+	// Args Defined cmd args for Jaeger components
+	// +optional
+	Args []string `json:"args,omitempty"`
+
+	// Envs Defined env for Jaeger components
+	// +optional
+	Envs []EnvSetting `json:"envs,omitempty"`
+}
+
+type EnvSetting struct {
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// Define Env name
+	Name string `json:"name,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// Define Env value
+	Value string `json:"value,omitempty"`
 }
 
 func init() {
