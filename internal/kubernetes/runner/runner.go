@@ -28,7 +28,7 @@ func (r *Runner) Name() string {
 }
 
 func (r *Runner) Start(ctx context.Context) error {
-	r.Logger = r.Logger.WithName(r.Name()).WithValues("runner", r.Name())
+	r.Logger = r.Logger.WithName(r.Name())
 
 	// create kubernetes manager and controller
 	manager, err := kubernetes.New(r.Server, r.IrMessage, r.StatusIRMap)

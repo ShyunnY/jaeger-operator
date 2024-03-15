@@ -61,7 +61,9 @@ type JaegerStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase",description="Jaeger instance's status"
+// +kubebuilder:printcolumn:name="STRATEGY",type="string",JSONPath=".spec.type",description="Jaeger deploy strategy"
+// +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.phase",description="Jaeger instance's status"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 
 // Jaeger is the Schema for the jaegers API
 type Jaeger struct {
@@ -88,8 +90,41 @@ type JaegerComponent struct {
 	AllInOne AllInOneComponent `json:"allInOne,omitempty"`
 }
 
+// CommonSpec Defines Generic configuration of Kubernetes components
 type CommonSpec struct {
+
+	// Metadata Defines metadata configuration of the component
 	Metadata CommonMetadata `json:"metadata,omitempty"`
+
+	// Service Defines configuration of the kubernetes Services
+	Service ServiceSettings `json:"service,omitempty"`
+}
+
+// ServiceType Defines type of components Services
+// +kubebuilder:validation:Enum={ClusterIP,NodePort,LoadBalancer}
+type ServiceType string
+
+var (
+	// ServiceTypeClusterIP means a service will only be accessible inside the
+	// cluster, via the cluster IP.
+	ServiceTypeClusterIP ServiceType = "ClusterIP"
+
+	// ServiceTypeNodePort means a service will be exposed on one port of
+	// every node, in addition to 'ClusterIP' type.
+	ServiceTypeNodePort ServiceType = "NodePort"
+
+	// ServiceTypeLoadBalancer means a service will be exposed via an
+	// external load balancer (if the cloud provider supports it), in addition
+	// to 'NodePort' type.
+	ServiceTypeLoadBalancer ServiceType = "LoadBalancer"
+)
+
+// ServiceSettings Defines personalized configuration of Jaeger component Service
+type ServiceSettings struct {
+
+	// Service Type string describes ingress methods for a service
+	// +kubebuilder:default=ClusterIP
+	Type ServiceType `json:"type,omitempty"`
 }
 
 // CommonMetadata Defines Metadata common to all components and infrastructure resources

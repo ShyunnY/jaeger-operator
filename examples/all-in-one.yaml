@@ -13,3 +13,9 @@ spec:
         envs:
           - name: JAEGER_DISABLED
             value: "true"
+  commonSpec:
+    metadata:
+      annotations:
+        env: dev-env
+    service:
+      type: LoadBalancer

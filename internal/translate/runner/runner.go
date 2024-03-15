@@ -31,7 +31,7 @@ func (r *Runner) Name() string {
 }
 
 func (r *Runner) Start(ctx context.Context) error {
-	r.Logger = r.Logger.WithName(r.Name()).WithValues("runner", r.Name())
+	r.Logger = r.Logger.WithName(r.Name())
 	go r.translateResources(ctx)
 	r.Logger.Info("translator started")
 

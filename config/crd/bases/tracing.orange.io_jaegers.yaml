@@ -15,10 +15,17 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - description: Jaeger deploy strategy
+      jsonPath: .spec.type
+      name: STRATEGY
+      type: string
     - description: Jaeger instance's status
       jsonPath: .status.phase
-      name: Status
+      name: STATUS
       type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -45,10 +52,11 @@ spec:
             description: JaegerSpec defines the desired state of Jaeger
             properties:
               commonSpec:
+                description: CommonSpec Defines Generic configuration of Kubernetes
+                  components
                 properties:
                   metadata:
-                    description: CommonMetadata Defines Metadata common to all components
-                      and infrastructure resources
+                    description: Metadata Defines metadata configuration of the component
                     properties:
                       annotations:
                         additionalProperties:
@@ -62,6 +70,19 @@ spec:
                         description: Labels Define labels setting for metadata on
                           the resource
                         type: object
+                    type: object
+                  service:
+                    description: Service Defines configuration of the kubernetes Services
+                    properties:
+                      type:
+                        default: ClusterIP
+                        description: Service Type string describes ingress methods
+                          for a service
+                        enum:
+                        - ClusterIP
+                        - NodePort
+                        - LoadBalancer
+                        type: string
                     type: object
                 type: object
               components:

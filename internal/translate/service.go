@@ -52,6 +52,7 @@ func QueryService(instance *jaegerv1a1.Jaeger) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: queryPorts,
+			Type:  serviceType(instance),
 		},
 	}
 
@@ -104,7 +105,7 @@ func CollectorServices(instance *jaegerv1a1.Jaeger) []*corev1.Service {
 			},
 		},
 		Spec: corev1.ServiceSpec{
-			Type:  corev1.ServiceTypeClusterIP,
+			Type:  serviceType(instance),
 			Ports: ports,
 		},
 	}
@@ -135,4 +136,13 @@ func CollectorServices(instance *jaegerv1a1.Jaeger) []*corev1.Service {
 
 func serviceName(instanceName, suffix string) string {
 	return fmt.Sprintf("%s-%s", instanceName, suffix)
+}
+
+func serviceType(instance *jaegerv1a1.Jaeger) corev1.ServiceType {
+	svcType := jaegerv1a1.ServiceTypeClusterIP
+	if len(instance.Spec.CommonSpec.Service.Type) != 0 {
+		svcType = instance.Spec.CommonSpec.Service.Type
+	}
+
+	return corev1.ServiceType(svcType)
 }

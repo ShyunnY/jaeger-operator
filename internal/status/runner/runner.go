@@ -37,7 +37,7 @@ func New(cfg *Config) Runner {
 }
 
 func (r *Runner) Start(ctx context.Context) error {
-	r.Logger = r.Logger.WithName(r.Name()).WithValues("runner", r.Name())
+	r.Logger = r.Logger.WithName(r.Name())
 	restConfig := ctrl.GetConfigOrDie()
 
 	cli, err := client.New(restConfig, client.Options{Scheme: jaeger.GetScheme()})

@@ -15,7 +15,7 @@ const (
 	InfrastructureComponent = "infrastructure"
 )
 
-// Jaeger Operator Common Labels Key
 const (
+	// OperatorByLabelKey Operator Common Labels Key
 	OperatorByLabelKey = "jaegertracing.orange.io/operated-by"
 )
