@@ -3,9 +3,11 @@ package infra
 import (
 	"context"
 	"fmt"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	gtwapi "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 var _ Inventory = (*InventoryComputer)(nil)
@@ -14,6 +16,7 @@ type Inventory interface {
 	ComputeServiceAccount(ctx context.Context, desire *corev1.ServiceAccount) (*InventoryObject, error)
 	ComputeService(ctx context.Context, desire []*corev1.Service) (*InventoryObject, error)
 	ComputeDeployment(ctx context.Context, desire *appsv1.Deployment) (*InventoryObject, error)
+	ComputeHTTPRoutes(ctx context.Context, desire []*gtwapi.HTTPRoute) (*InventoryObject, error)
 }
 
 type InventoryObject struct {
@@ -30,6 +33,72 @@ type InventoryComputer struct {
 	instanceName string
 
 	cli client.Client
+}
+
+func (ic *InventoryComputer) ComputeHTTPRoutes(ctx context.Context, desires []*gtwapi.HTTPRoute) (*InventoryObject, error) {
+
+	list := &gtwapi.HTTPRouteList{}
+	if err := ic.cli.List(
+		ctx,
+		list,
+		client.InNamespace(ic.namespace),
+		client.MatchingLabels{
+			"app.kubernetes.io/name":       ic.instanceName,
+			"app.kubernetes.io/managed-by": "jaeger-operator",
+		},
+	); err != nil {
+		return nil, err
+	}
+
+	updates := []client.Object{}
+	mcreate := make(map[string]*gtwapi.HTTPRoute, len(desires))
+	mdelete := make(map[string]*gtwapi.HTTPRoute, len(desires))
+	for i := range desires {
+		desire := desires[i]
+		mcreate[toNsName(desire)] = desire
+		mdelete[toNsName(desire)] = desire
+	}
+
+	if len(list.Items) == 0 {
+		clear(mdelete)
+	} else {
+		for i := range list.Items {
+			exist := list.Items[i]
+			if desire, ok := mcreate[toNsName(&exist)]; ok {
+				dp := exist.DeepCopy()
+
+				dp.SetLabels(map[string]string{})
+				for k, v := range desire.Labels {
+					dp.Labels[k] = v
+				}
+				dp.SetAnnotations(map[string]string{})
+				for k, v := range desire.Annotations {
+					dp.Annotations[k] = v
+				}
+				dp.OwnerReferences = desire.OwnerReferences
+
+				dp.Spec = desire.Spec
+
+				updates = append(updates, dp)
+				delete(mcreate, toNsName(&exist))
+				delete(mdelete, toNsName(&exist))
+			}
+		}
+	}
+
+	createObjs := []client.Object{}
+	deleteObjs := []client.Object{}
+	for _, service := range mcreate {
+		createObjs = append(createObjs, service)
+	}
+	for _, service := range mdelete {
+		deleteObjs = append(deleteObjs, service)
+	}
+	return &InventoryObject{
+		CreateObjects: createObjs,
+		UpdateObjects: updates,
+		DeleteObjects: deleteObjs,
+	}, nil
 }
 
 func (ic *InventoryComputer) ComputeService(ctx context.Context, desires []*corev1.Service) (*InventoryObject, error) {

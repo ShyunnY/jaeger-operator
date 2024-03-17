@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	gtwapi "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 // DeploymentType Define the type of Jaeger deployment
@@ -32,7 +33,7 @@ var (
 	Distribute DeploymentType = "distribute"
 )
 
-// JaegerSpec defines the desired state of Jaeger
+// JaegerSpec Define the desired state of Jaeger
 type JaegerSpec struct {
 
 	// +kubebuilder:default=allInOne
@@ -48,7 +49,7 @@ type JaegerSpec struct {
 	CommonSpec CommonSpec `json:"commonSpec,omitempty"`
 }
 
-// JaegerStatus defines the observed state of Jaeger
+// JaegerStatus Define the observed state of Jaeger
 type JaegerStatus struct {
 
 	// +kubebuilder:default=Unknown
@@ -90,17 +91,53 @@ type JaegerComponent struct {
 	AllInOne AllInOneComponent `json:"allInOne,omitempty"`
 }
 
-// CommonSpec Defines Generic configuration of Kubernetes components
+// CommonSpec Define Generic configuration of Kubernetes components
 type CommonSpec struct {
 
-	// Metadata Defines metadata configuration of the component
+	// Metadata Define metadata configuration of the component
 	Metadata CommonMetadata `json:"metadata,omitempty"`
 
-	// Service Defines configuration of the kubernetes Services
+	// Service Define configuration of the kubernetes Services
 	Service ServiceSettings `json:"service,omitempty"`
+
+	// +optional
+	// HTTPRoute Define the configuration of GatewayAPI routes
+	HTTPRoute []HTTPRoute `json:"httpRoutes,omitempty"`
 }
 
-// ServiceType Defines type of components Services
+// HTTPRoute Define the HTTPRoute configuration for the Gateway API
+type HTTPRoute struct {
+
+	// +kubebuilder:validation:Required
+	// Target Define the Service target to which routes need to be added
+	Target JaegerServiceTarget `json:"target,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// TargetPort Define the Service target port to which routes need to be added
+	TargetPort *int `json:"targetPort,omitempty"`
+
+	// +optional
+	// Hostnames Define a set of hostnames that should match against the HTTP Host
+	// header to select a HTTPRoute used to process the request.
+	Hostnames []gtwapi.Hostname `json:"hostnames,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// ParentRefs references the resources (usually Gateways) that a Route wants
+	// to be attached to.
+	ParentRef *gtwapi.ParentReference `json:"parentRef,omitempty"`
+}
+
+// JaegerServiceTarget Define target of Jaeger Kubernetes Services target
+// +kubebuilder:validation:Enum={collector,query}
+type JaegerServiceTarget string
+
+var (
+	CollectorServiceTarget JaegerServiceTarget = "collector"
+
+	QueryServiceTarget JaegerServiceTarget = "query"
+)
+
+// ServiceType Define type of components Services
 // +kubebuilder:validation:Enum={ClusterIP,NodePort,LoadBalancer}
 type ServiceType string
 
@@ -119,7 +156,7 @@ var (
 	ServiceTypeLoadBalancer ServiceType = "LoadBalancer"
 )
 
-// ServiceSettings Defines personalized configuration of Jaeger component Service
+// ServiceSettings Define personalized configuration of Jaeger component Service
 type ServiceSettings struct {
 
 	// Service Type string describes ingress methods for a service
@@ -127,7 +164,7 @@ type ServiceSettings struct {
 	Type ServiceType `json:"type,omitempty"`
 }
 
-// CommonMetadata Defines Metadata common to all components and infrastructure resources
+// CommonMetadata Define Metadata common to all components and infrastructure resources
 type CommonMetadata struct {
 
 	// Labels Define labels setting for metadata on the resource
@@ -142,7 +179,7 @@ type AllInOneComponent struct {
 	ComponentSettings `json:"setting,omitempty"`
 }
 
-// ComponentSettings Defines common Settings between components
+// ComponentSettings Define common Settings between components
 type ComponentSettings struct {
 
 	// Args Defined cmd args for Jaeger components

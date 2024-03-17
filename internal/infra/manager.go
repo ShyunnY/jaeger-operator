@@ -88,6 +88,21 @@ func (m *Manager) BuildInfraResources(ctx context.Context, infraIR *message.Infr
 		}
 	}
 
+	// create httpRoute
+	if httpRoutesObj, err := ic.ComputeHTTPRoutes(ctx, infraIR.HTTPRoutes); err != nil {
+		m.logger.Error(err, "failed to compute HTTPRoute")
+
+		return err
+	} else {
+		if err := m.infraClient.CreateOrUpdateOrDelete(ctx, func() *InventoryObject {
+			return httpRoutesObj
+		}); err != nil {
+			m.logger.Error(err, "failed to create or update HTTPRoutes")
+
+			status.SetJaegerCondition(condJaeger, "Error", metav1.ConditionFalse, "Infra", "failed to create or update HTTPRoutes")
+		}
+	}
+
 	if condJaeger.Status.Conditions == nil || len(condJaeger.Status.Conditions) == 0 {
 		condJaeger.Status.Phase = "Success"
 		status.SetJaegerCondition(condJaeger, "Success", metav1.ConditionTrue, "Infra", "success to manager infra resource")

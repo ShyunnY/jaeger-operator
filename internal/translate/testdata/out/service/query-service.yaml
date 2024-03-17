@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: all-in-one-query
   namespace: default
+  labels:
+    tracing.orange.io/service-target: query
   ownerReferences:
     - apiVersion: tracing.orange.io/v1alpha1
       controller: true
@@ -10,6 +12,7 @@ metadata:
       name: all-in-one
       uid: a98d5c73-8656-4035-be2f-0930f58bc89d
 spec:
+  type: ClusterIP
   ports:
     - name: grpc-query
       port: 16685

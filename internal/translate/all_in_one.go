@@ -139,20 +139,23 @@ func (r *AllInOneRender) ConfigMap() (*corev1.ConfigMap, error) {
 
 // Service Returns the Service of the expected AllInOne Strategy
 func (r *AllInOneRender) Service() ([]*corev1.Service, error) {
+
 	// services: agent,collect,query
 	services := []*corev1.Service{}
 	selector := utils.MergeCommonMap(utils.Labels(r.instance.Name, "pod", string(r.GetStrategy())), r.labels)
 
 	queryService := QueryService(r.instance)
 	queryService.Spec.Selector = selector
-	queryService.Labels = utils.MergeCommonMap(utils.Labels(r.instance.Name, "service", string(r.GetStrategy())), r.labels)
+	queryService.Labels = utils.MergeCommonMap(queryService.Labels, utils.MergeCommonMap(
+		utils.Labels(r.instance.Name, "service", string(r.GetStrategy())), r.labels))
 	queryService.Annotations = r.annotations
 	services = append(services, queryService)
 
 	collectorServices := CollectorServices(r.instance)
 	for i := range collectorServices {
 		collectorServices[i].Spec.Selector = selector
-		collectorServices[i].Labels = utils.MergeCommonMap(utils.Labels(r.instance.Name, "service", string(r.GetStrategy())), r.labels)
+		collectorServices[i].Labels = utils.MergeCommonMap(collectorServices[i].Labels,
+			utils.MergeCommonMap(utils.Labels(r.instance.Name, "service", string(r.GetStrategy())), r.labels))
 		collectorServices[i].Annotations = r.annotations
 	}
 	services = append(services, collectorServices...)

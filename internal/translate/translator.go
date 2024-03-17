@@ -2,13 +2,16 @@ package translate
 
 import (
 	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
 	"github.com/ShyunnY/jaeger-operator/internal/message"
 	"github.com/ShyunnY/jaeger-operator/internal/status"
 	"github.com/ShyunnY/jaeger-operator/internal/utils"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 type Translator struct {
@@ -54,8 +57,6 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 	}
 
 	// render strategy resources
-	// TODO: If there is an error in rendering the resource, an error message will be added to the condition
-
 	if sa, err := strRender.ServiceAccount(); err != nil {
 		t.Logger.Error(err, "failed to render service account resource",
 			"instance", instance.Name,
@@ -87,7 +88,9 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 	}
 
 	// TODO: need to deal with services with different strategy and with multiple Service resources
-	if services, err := strRender.Service(); err != nil {
+	var services []*corev1.Service
+	var err error
+	if services, err = strRender.Service(); err != nil {
 		t.Logger.Error(err, "failed to render service resource",
 			"instance", instance.Name,
 		)
@@ -95,6 +98,18 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 		status.SetJaegerCondition(instance, "Error", metav1.ConditionFalse, "Translate", "failed to render deployment resource")
 	} else if len(services) != 0 {
 		infraIR.AddResources(services)
+	}
+
+	if instance.EnableHTTPRoute() {
+		if httpRoute, err := processHTTPRoute(instance, services); err != nil {
+			t.Logger.Error(err, "failed to render httpRoute resource",
+				"instance", instance.Name,
+			)
+
+			status.SetJaegerCondition(instance, "Error", metav1.ConditionFalse, "Translate", "failed to render httpRoute resource")
+		} else if len(httpRoute) != 0 {
+			infraIR.AddResources(httpRoute)
+		}
 	}
 
 	if instance.Status.Conditions == nil || len(instance.Status.Conditions) == 0 {

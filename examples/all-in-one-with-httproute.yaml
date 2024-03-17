@@ -1,0 +1,27 @@
+apiVersion: tracing.orange.io/v1alpha1
+kind: Jaeger
+metadata:
+  name: all-in-one
+  namespace: default
+spec:
+  type: allInOne
+  components:
+    allInOne:
+      setting:
+        args:
+          - "--memory.max-traces=100"
+        envs:
+          - name: JAEGER_DISABLED
+            value: "true"
+  commonSpec:
+    metadata:
+      annotations:
+        env: dev-env
+    service:
+      type: ClusterIP
+    httpRoutes:
+      - target: query
+        targetPort: 16686
+        parentRef:
+          name: gtw
+          port: 6686

@@ -46,6 +46,9 @@ func QueryService(instance *jaegerv1a1.Jaeger) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName(instance.Name, "query"),
 			Namespace: instance.Namespace,
+			Labels: map[string]string{
+				jaegerv1a1.ServiceTargetLabelKey: string(jaegerv1a1.QueryServiceTarget),
+			},
 			OwnerReferences: []metav1.OwnerReference{
 				GetOwnerRef(instance),
 			},
@@ -100,6 +103,9 @@ func CollectorServices(instance *jaegerv1a1.Jaeger) []*corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName(instance.Name, "collect"),
 			Namespace: instance.Namespace,
+			Labels: map[string]string{
+				jaegerv1a1.ServiceTargetLabelKey: string(jaegerv1a1.CollectorServiceTarget),
+			},
 			OwnerReferences: []metav1.OwnerReference{
 				GetOwnerRef(instance),
 			},
@@ -119,6 +125,9 @@ func CollectorServices(instance *jaegerv1a1.Jaeger) []*corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName(instance.Name, "collect-headless"),
 			Namespace: instance.Namespace,
+			Labels: map[string]string{
+				jaegerv1a1.ServiceTargetLabelKey: string(jaegerv1a1.CollectorServiceTarget),
+			},
 			OwnerReferences: []metav1.OwnerReference{
 				GetOwnerRef(instance),
 			},
