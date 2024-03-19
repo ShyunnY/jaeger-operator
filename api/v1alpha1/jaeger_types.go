@@ -87,9 +87,48 @@ type JaegerList struct {
 // JaegerComponent Defining individual components
 type JaegerComponent struct {
 
-	// AllInOne Define all-in-one Jaeger component
+	// AllInOne Define all-in-one component
+	// +optional
 	AllInOne AllInOneComponent `json:"allInOne,omitempty"`
+
+	// Collector Define collector component
+	// +optional
+	Collector CollectorComponent
+
+	// QueryComponent Define collector component
+	// +optional
+	Query QueryComponent
+
+	// Storage Define backend storage component
+	// +optional
+	Storage StorageComponent
 }
+
+type CollectorComponent struct {
+	ComponentSettings `json:"setting,omitempty"`
+}
+
+type QueryComponent struct {
+	ComponentSettings `json:"setting,omitempty"`
+}
+
+// StorageComponent Define storage component
+type StorageComponent struct {
+
+	// Type Define backend storage type
+	Type StorageType
+
+	// Type Define backend storage options
+	Options []string
+}
+
+type StorageType string
+
+var (
+	MemoryStorageType StorageType = "memory"
+
+	ElasticSarchStorage StorageType = "elasticsearch"
+)
 
 // CommonSpec Define Generic configuration of Kubernetes components
 type CommonSpec struct {
@@ -100,9 +139,16 @@ type CommonSpec struct {
 	// Service Define configuration of the kubernetes Services
 	Service ServiceSettings `json:"service,omitempty"`
 
+	// Deployment Define configuration of the kubernetes Deployments
+	Deployment DeploymentSettings `json:"deployment"`
+
 	// +optional
 	// HTTPRoute Define the configuration of GatewayAPI routes
 	HTTPRoute []HTTPRoute `json:"httpRoutes,omitempty"`
+}
+
+type DeploymentSettings struct {
+	Replicas *int32
 }
 
 // HTTPRoute Define the HTTPRoute configuration for the Gateway API

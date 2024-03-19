@@ -1,6 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    annotation-1: a-1
+    annotation-2: a-2
   creationTimestamp: null
   labels:
     app: jaeger
@@ -8,6 +11,8 @@ metadata:
     app.kubernetes.io/managed-by: jaeger-operator
     app.kubernetes.io/name: all-in-one
     app.kubernetes.io/part-of: jaeger
+    label-1: l-1
+    label-2: l-2
     tracing.orange.io/strategy: allInOne
   name: all-in-one-default-allInOne
   namespace: default
@@ -18,7 +23,7 @@ metadata:
     name: all-in-one
     uid: a98d5c73-8656-4035-be2f-0930f58bc89d
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: jaeger
@@ -26,10 +31,15 @@ spec:
       app.kubernetes.io/managed-by: jaeger-operator
       app.kubernetes.io/name: all-in-one
       app.kubernetes.io/part-of: jaeger
+      label-1: l-1
+      label-2: l-2
       tracing.orange.io/strategy: allInOne
   strategy: {}
   template:
     metadata:
+      annotations:
+        annotation-1: a-1
+        annotation-2: a-2
       creationTimestamp: null
       labels:
         app: jaeger
@@ -37,6 +47,8 @@ spec:
         app.kubernetes.io/managed-by: jaeger-operator
         app.kubernetes.io/name: all-in-one
         app.kubernetes.io/part-of: jaeger
+        label-1: l-1
+        label-2: l-2
         tracing.orange.io/strategy: allInOne
     spec:
       containers:

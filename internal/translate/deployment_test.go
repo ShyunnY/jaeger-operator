@@ -17,12 +17,11 @@ import (
 func TestAllInOneDeployment(t *testing.T) {
 
 	cases := []struct {
-		caseName             string
-		render               StrategyRender
-		expectDeploymentYaml string
+		caseName string
+		render   StrategyRender
 	}{
 		{
-			caseName: "Render normal Deployment",
+			caseName: "all-in-one-normal",
 			render: &AllInOneRender{
 				instance: &jaegerv1a1.Jaeger{
 					TypeMeta: metav1.TypeMeta{
@@ -39,10 +38,9 @@ func TestAllInOneDeployment(t *testing.T) {
 					},
 				},
 			},
-			expectDeploymentYaml: "all-in-one-normal",
 		},
 		{
-			caseName: "Render normal Deployment with custom labels and annotations",
+			caseName: "all-in-one-custom",
 			render: &AllInOneRender{
 				instance: &jaegerv1a1.Jaeger{
 					TypeMeta: metav1.TypeMeta{
@@ -56,18 +54,27 @@ func TestAllInOneDeployment(t *testing.T) {
 					},
 					Spec: jaegerv1a1.JaegerSpec{
 						Type: jaegerv1a1.AllInOneType,
+						CommonSpec: jaegerv1a1.CommonSpec{
+							Deployment: jaegerv1a1.DeploymentSettings{
+								Replicas: func() *int32 {
+									var replicas int32 = 3
+									return &replicas
+								}(),
+							},
+							Metadata: jaegerv1a1.CommonMetadata{
+								Labels: map[string]string{
+									"label-1": "l-1",
+									"label-2": "l-2",
+								},
+								Annotations: map[string]string{
+									"annotation-1": "a-1",
+									"annotation-2": "a-2",
+								},
+							},
+						},
 					},
 				},
-				labels: map[string]string{
-					"custom-labels1": "label1",
-					"custom-labels2": "label2",
-				},
-				annotations: map[string]string{
-					"custom-annotation1": "annotation1",
-					"custom-annotation2": "annotation2",
-				},
 			},
-			expectDeploymentYaml: "all-in-one-with-custom-metadata",
 		},
 	}
 
@@ -77,7 +84,16 @@ func TestAllInOneDeployment(t *testing.T) {
 			deploy, err := tc.render.Deployment()
 			assert.NoError(t, err)
 
-			expectDeploy, err := loadDeployment(tc.expectDeploymentYaml)
+			if false {
+				outYaml, err := yaml.Marshal(deploy)
+				assert.NoError(t, err)
+
+				err = os.WriteFile(fmt.Sprintf("testdata/out/deployment/%s.yaml", tc.caseName), outYaml, 0644)
+				assert.NoError(t, err)
+				return
+			}
+
+			expectDeploy, err := loadDeployment(tc.caseName)
 			assert.NoError(t, err)
 			assert.Equal(t, expectDeploy, deploy)
 		})

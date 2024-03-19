@@ -30,3 +30,15 @@ func (j *Jaeger) EnableHTTPRoute() bool {
 func (j *Jaeger) GetDeploymentType() DeploymentType {
 	return j.Spec.Type
 }
+
+func (j *Jaeger) GetCommonSpecLabels() map[string]string {
+	if labels := j.Spec.CommonSpec.Metadata.Labels; labels == nil {
+		return map[string]string{}
+	} else {
+		return labels
+	}
+}
+
+func (j *Jaeger) GetCommonSpecAnnotations() map[string]string {
+	return j.Spec.CommonSpec.Metadata.Annotations
+}

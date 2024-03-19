@@ -17,12 +17,11 @@ import (
 func TestAllInOneServiceAccount(t *testing.T) {
 
 	cases := []struct {
-		caseName                 string
-		render                   StrategyRender
-		expectServiceAccountYaml string
+		caseName string
+		render   StrategyRender
 	}{
 		{
-			caseName: "Render normal Service Account",
+			caseName: "service-account-normal",
 			render: &AllInOneRender{
 				instance: &jaegerv1a1.Jaeger{
 					TypeMeta: metav1.TypeMeta{
@@ -39,10 +38,9 @@ func TestAllInOneServiceAccount(t *testing.T) {
 					},
 				},
 			},
-			expectServiceAccountYaml: "all-in-one-normal",
 		},
 		{
-			caseName: "Render normal Service Account with custom labels and annotations",
+			caseName: "service-account-difference-strategy",
 			render: &AllInOneRender{
 				instance: &jaegerv1a1.Jaeger{
 					TypeMeta: metav1.TypeMeta{
@@ -50,24 +48,44 @@ func TestAllInOneServiceAccount(t *testing.T) {
 						Kind:       "Jaeger",
 					},
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      "all-in-one",
+						Name:      "distribute",
 						Namespace: "default",
 						UID:       types.UID("a98d5c73-8656-4035-be2f-0930f58bc89d"),
 					},
 					Spec: jaegerv1a1.JaegerSpec{
-						Type: jaegerv1a1.AllInOneType,
+						Type: jaegerv1a1.Distribute,
 					},
 				},
-				labels: map[string]string{
-					"custom-labels1": "label1",
-					"custom-labels2": "label2",
-				},
-				annotations: map[string]string{
-					"custom-annotation1": "annotation1",
-					"custom-annotation2": "annotation2",
+			},
+		},
+		{
+			caseName: "service-account-custom",
+			render: &AllInOneRender{
+				instance: &jaegerv1a1.Jaeger{
+					TypeMeta: metav1.TypeMeta{
+						APIVersion: "tracing.orange.io/v1alpha1",
+						Kind:       "Jaeger",
+					},
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "prod",
+						Namespace: "default",
+						UID:       types.UID("a98d5c73-8656-4035-be2f-0930f58bc89d"),
+					},
+					Spec: jaegerv1a1.JaegerSpec{
+						Type: jaegerv1a1.Distribute,
+						CommonSpec: jaegerv1a1.CommonSpec{
+							Metadata: jaegerv1a1.CommonMetadata{
+								Labels: map[string]string{
+									"label-1": "l-1",
+								},
+								Annotations: map[string]string{
+									"annotation-1": "a-1",
+								},
+							},
+						},
+					},
 				},
 			},
-			expectServiceAccountYaml: "all-in-one-with-custom-metadata",
 		},
 	}
 
@@ -77,7 +95,16 @@ func TestAllInOneServiceAccount(t *testing.T) {
 			sa, err := tc.render.ServiceAccount()
 			assert.NoError(t, err)
 
-			expectServiceAccount, err := loadServiceAccount(tc.expectServiceAccountYaml)
+			if false {
+				outYaml, err := yaml.Marshal(sa)
+				assert.NoError(t, err)
+
+				err = os.WriteFile(fmt.Sprintf("testdata/out/serviceaccount/%s.yaml", tc.caseName), outYaml, 0644)
+				assert.NoError(t, err)
+				return
+			}
+
+			expectServiceAccount, err := loadServiceAccount(tc.caseName)
 			assert.NoError(t, err)
 			assert.Equal(t, expectServiceAccount, sa)
 		})

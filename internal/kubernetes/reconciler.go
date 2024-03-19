@@ -59,6 +59,7 @@ func NewJaegerController(cfg config.Server, mgr manager.Manager, jaegerIR *messa
 
 // Reconcile
 // TODO: 与Jaeger CRD有关的修改都放置在reconcile中
+// TODO: 需要处理: 已经有一个jaeger实例, 又传入一个同名的不同配置jaeger, 该怎么处理?
 func (r *jaegerReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	r.logger.Info("reconcile jaeger object", "instance", req.Name)
 
@@ -94,10 +95,34 @@ func (r *jaegerReconciler) Reconcile(ctx context.Context, req reconcile.Request)
 		return reconcile.Result{}, err
 	}
 
+	normalizeJaeger(&instance)
+
 	// Let translate calculate the K8s resources required by Jaeger.
 	r.irMessage.Store(req.String(), &instance)
 
 	return reconcile.Result{}, nil
+}
+
+// normalizeJaeger Normalizes changes to Jaeger to detect incompatible patterns and apply default value
+func normalizeJaeger(instance *jaegerv1a1.Jaeger) {
+
+	if len(instance.Spec.Type) == 0 {
+		instance.Spec.Type = jaegerv1a1.AllInOneType
+	}
+
+	if len(instance.Spec.Components.Storage.Type) == 0 {
+		instance.Spec.Components.Storage.Type = jaegerv1a1.MemoryStorageType
+	}
+
+	if instance.Spec.Type != jaegerv1a1.AllInOneType &&
+		instance.Spec.Components.Storage.Type == jaegerv1a1.MemoryStorageType {
+		instance.Spec.Type = jaegerv1a1.AllInOneType
+	}
+
+	if len(instance.Name) == 0 {
+		instance.Name = "simple-jaeger"
+	}
+
 }
 
 func (r *jaegerReconciler) hasInWatchNamespace(object client.Object) bool {

@@ -11,7 +11,6 @@ import (
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
 	"github.com/ShyunnY/jaeger-operator/internal/message"
 	"github.com/ShyunnY/jaeger-operator/internal/status"
-	"github.com/ShyunnY/jaeger-operator/internal/utils"
 )
 
 type Translator struct {
@@ -28,28 +27,22 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 
 	infraIR := new(message.InfraIR)
 	instance.Status.Phase = "Failed"
-	if instance.Spec.Type == "" {
-		infraIR.Strategy = string(jaegerv1a1.AllInOneType)
-	} else {
-		infraIR.Strategy = string(instance.Spec.Type)
-	}
 
 	// Compute commonSpec and incorporate common metadata
-	mergeCommonLabels := utils.MergeCommonMap(instance.Labels, instance.Spec.CommonSpec.Metadata.Labels)
-	mergeCommonAnnotations := utils.MergeCommonMap(instance.Annotations, instance.Spec.CommonSpec.Metadata.Annotations)
 
 	infraIR.InstanceMedata = instance.ObjectMeta
+	infraIR.Strategy = string(instance.Spec.Type)
 
 	var strRender StrategyRender
 	switch infraIR.Strategy {
 	case string(jaegerv1a1.AllInOneType):
 		strRender = &AllInOneRender{
-			instance:    instance,
-			labels:      mergeCommonLabels,
-			annotations: mergeCommonAnnotations,
+			instance: instance,
 		}
 	case string(jaegerv1a1.Distribute):
-		// TODO: production resources render
+		strRender = &DistributeRender{
+			instance: instance,
+		}
 	default:
 		t.Logger.Info("failed to get strategy render")
 

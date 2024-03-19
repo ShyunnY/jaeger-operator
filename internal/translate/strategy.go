@@ -1,10 +1,14 @@
 package translate
 
 import (
+	"fmt"
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
+	"github.com/ShyunnY/jaeger-operator/internal/utils"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"strings"
 )
 
 var _ StrategyRender = (*AllInOneRender)(nil)
@@ -14,8 +18,6 @@ type StrategyRender interface {
 	ServiceAccount() (*corev1.ServiceAccount, error)
 	ConfigMap() (*corev1.ConfigMap, error)
 	Service() ([]*corev1.Service, error)
-	GetStrategy() jaegerv1a1.DeploymentType
-	Name() string
 }
 
 func GetOwnerRef(instance *jaegerv1a1.Jaeger) metav1.OwnerReference {
@@ -27,4 +29,30 @@ func GetOwnerRef(instance *jaegerv1a1.Jaeger) metav1.OwnerReference {
 		UID:        instance.UID,
 		Controller: &controlled,
 	}
+}
+
+func NamespacedName(instance *jaegerv1a1.Jaeger) string {
+	ret := strings.Split(types.NamespacedName{
+		Namespace: instance.Name,
+		Name:      instance.Namespace,
+	}.String(), "/")
+
+	return fmt.Sprintf("%s-%s", ret[0], ret[1])
+}
+
+func GetStrategy(instance *jaegerv1a1.Jaeger) string {
+	return string(instance.GetDeploymentType())
+}
+
+func ComponentLabels(component string, instance *jaegerv1a1.Jaeger) map[string]string {
+	return utils.MergeCommonMap(
+		utils.Labels(
+			instance.Name, component,
+			GetStrategy(instance)),
+		instance.GetCommonSpecLabels(),
+	)
+}
+
+func ComponentName(instanceName, suffix string) string {
+	return fmt.Sprintf("%s-%s", instanceName, suffix)
 }
