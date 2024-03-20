@@ -33,7 +33,8 @@ func processHTTPRoute(instance *jaegerv1a1.Jaeger, services []*corev1.Service) (
 		}
 
 		// Set different HTTPRoute depending on the service target
-		if service := GetServiceByTarget(route.Target, services); service != nil {
+		var service *corev1.Service
+		if service = GetServiceByTarget(route.Target, services); service != nil {
 			backendRefs = buildBackendRef(service, route.TargetPort)
 		}
 
@@ -43,7 +44,7 @@ func processHTTPRoute(instance *jaegerv1a1.Jaeger, services []*corev1.Service) (
 				Kind:       "HTTPRoute",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      instance.Name,
+				Name:      service.Name,
 				Namespace: instance.Namespace,
 				Labels:    utils.Labels(instance.Name, "httproute", string(instance.GetDeploymentType())),
 				OwnerReferences: []metav1.OwnerReference{

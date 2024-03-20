@@ -93,15 +93,15 @@ type JaegerComponent struct {
 
 	// Collector Define collector component
 	// +optional
-	Collector CollectorComponent
+	Collector CollectorComponent `json:"collector,omitempty"`
 
 	// QueryComponent Define collector component
 	// +optional
-	Query QueryComponent
+	Query QueryComponent `json:"query,omitempty"`
 
 	// Storage Define backend storage component
 	// +optional
-	Storage StorageComponent
+	Storage StorageComponent `json:"storage,omitempty"`
 }
 
 type CollectorComponent struct {
@@ -116,17 +116,17 @@ type QueryComponent struct {
 type StorageComponent struct {
 
 	// Type Define backend storage type
-	Type StorageType
+	Type StorageType `json:"type,omitempty"`
 
 	// Es Define backend storage is elasticsearch
-	Es EsStorage
+	Es EsStorage `json:"es,omitempty"`
 
 	// Options Define backend storage options
-	Options []string
+	Options []string `json:"options,omitempty"`
 }
 
 type EsStorage struct {
-	URL string
+	URL string `json:"url,omitempty"`
 }
 
 type StorageType string
@@ -139,23 +139,27 @@ var (
 
 // CommonSpec Define Generic configuration of Kubernetes components
 type CommonSpec struct {
-
 	// Metadata Define metadata configuration of the component
+	// +optional
 	Metadata CommonMetadata `json:"metadata,omitempty"`
 
 	// Service Define configuration of the kubernetes Services
+	// +optional
 	Service ServiceSettings `json:"service,omitempty"`
 
 	// Deployment Define configuration of the kubernetes Deployments
+	// +optional
 	Deployment DeploymentSettings `json:"deployment"`
 
-	// +optional
 	// HTTPRoute Define the configuration of GatewayAPI routes
+	// +optional
 	HTTPRoute []HTTPRoute `json:"httpRoutes,omitempty"`
 }
 
 type DeploymentSettings struct {
-	Replicas *int32
+	// Replicas Define Deployment replicas number
+	// +optional
+	Replicas *int32 `json:"replicas,omitempty"`
 }
 
 // HTTPRoute Define the HTTPRoute configuration for the Gateway API

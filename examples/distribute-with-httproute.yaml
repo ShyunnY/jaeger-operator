@@ -1,24 +1,14 @@
 apiVersion: tracing.orange.io/v1alpha1
 kind: Jaeger
 metadata:
-  name: all-in-one-with-route
+  name: distribute-es
   namespace: default
 spec:
-  type: allInOne
+  type: distribute
   components:
-    allInOne:
-      setting:
-        args:
-          - "--memory.max-traces=100"
-        envs:
-          - name: JAEGER_DISABLED
-            value: "true"
+    storage:
+      type: elasticsearch
   commonSpec:
-    metadata:
-      annotations:
-        env: dev-env
-    service:
-      type: ClusterIP
     httpRoutes:
       - target: query
         targetPort: 16686

@@ -35,9 +35,9 @@ func (m *Manager) BuildInfraResources(ctx context.Context, infraIR *message.Infr
 	}
 
 	ic := InventoryComputer{
-		namespace:    infraIR.InstanceMedata.Name,
-		instanceName: infraIR.InstanceMedata.Namespace,
-		cli:          m.cli,
+		instanceName:      infraIR.InstanceMedata.Name,
+		instanceNamespace: infraIR.InstanceMedata.Namespace,
+		cli:               m.cli,
 	}
 	condJaeger := new(jaegerv1a1.Jaeger)
 	condJaeger.Status.Phase = "Failed"

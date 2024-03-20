@@ -55,6 +55,15 @@ spec:
                 description: CommonSpec Define Generic configuration of Kubernetes
                   components
                 properties:
+                  deployment:
+                    description: Deployment Define configuration of the kubernetes
+                      Deployments
+                    properties:
+                      replicas:
+                        description: Replicas Define Deployment replicas number
+                        format: int32
+                        type: integer
+                    type: object
                   httpRoutes:
                     description: HTTPRoute Define the configuration of GatewayAPI
                       routes
@@ -297,7 +306,7 @@ spec:
                 description: Components Define the subComponents of Jaeger
                 properties:
                   allInOne:
-                    description: AllInOne Define all-in-one Jaeger component
+                    description: AllInOne Define all-in-one component
                     properties:
                       setting:
                         description: ComponentSettings Define common Settings between
@@ -323,6 +332,80 @@ spec:
                               type: object
                             type: array
                         type: object
+                    type: object
+                  collector:
+                    description: Collector Define collector component
+                    properties:
+                      setting:
+                        description: ComponentSettings Define common Settings between
+                          components
+                        properties:
+                          args:
+                            description: Args Defined cmd args for Jaeger components
+                            items:
+                              type: string
+                            type: array
+                          envs:
+                            description: Envs Defined env for Jaeger components
+                            items:
+                              properties:
+                                name:
+                                  description: Define Env name
+                                  minLength: 1
+                                  type: string
+                                value:
+                                  description: Define Env value
+                                  minLength: 1
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
+                    type: object
+                  query:
+                    description: QueryComponent Define collector component
+                    properties:
+                      setting:
+                        description: ComponentSettings Define common Settings between
+                          components
+                        properties:
+                          args:
+                            description: Args Defined cmd args for Jaeger components
+                            items:
+                              type: string
+                            type: array
+                          envs:
+                            description: Envs Defined env for Jaeger components
+                            items:
+                              properties:
+                                name:
+                                  description: Define Env name
+                                  minLength: 1
+                                  type: string
+                                value:
+                                  description: Define Env value
+                                  minLength: 1
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
+                    type: object
+                  storage:
+                    description: Storage Define backend storage component
+                    properties:
+                      es:
+                        description: Es Define backend storage is elasticsearch
+                        properties:
+                          url:
+                            type: string
+                        type: object
+                      options:
+                        description: Options Define backend storage options
+                        items:
+                          type: string
+                        type: array
+                      type:
+                        description: Type Define backend storage type
+                        type: string
                     type: object
                 type: object
               type:

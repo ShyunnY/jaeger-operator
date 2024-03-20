@@ -3,7 +3,13 @@
   metadata:
     creationTimestamp: null
     labels:
+      app: jaeger
+      app.kubernetes.io/component: service
+      app.kubernetes.io/managed-by: jaeger-operator
+      app.kubernetes.io/name: production-collector-svc
+      app.kubernetes.io/part-of: jaeger
       tracing.orange.io/service-target: collector
+      tracing.orange.io/strategy: distribute
     name: production-collector-svc
     namespace: default
     ownerReferences:
@@ -49,7 +55,13 @@
   metadata:
     creationTimestamp: null
     labels:
+      app: jaeger
+      app.kubernetes.io/component: service
+      app.kubernetes.io/managed-by: jaeger-operator
+      app.kubernetes.io/name: production-collector-svc
+      app.kubernetes.io/part-of: jaeger
       tracing.orange.io/service-target: collector
+      tracing.orange.io/strategy: distribute
     name: production-collector-headless-svc
     namespace: default
     ownerReferences:
@@ -59,7 +71,7 @@
       name: production
       uid: a98d5c73-8656-4035-be2f-0930f58bc89d
   spec:
-    clusterIP: NONE
+    clusterIP: None
     ports:
     - name: zipkin
       port: 9411
@@ -96,7 +108,13 @@
   metadata:
     creationTimestamp: null
     labels:
-      tracing.orange.io/service-target: collector
+      app: jaeger
+      app.kubernetes.io/component: service
+      app.kubernetes.io/managed-by: jaeger-operator
+      app.kubernetes.io/name: production-query-svc
+      app.kubernetes.io/part-of: jaeger
+      tracing.orange.io/service-target: query
+      tracing.orange.io/strategy: distribute
     name: production-query-svc
     namespace: default
     ownerReferences:

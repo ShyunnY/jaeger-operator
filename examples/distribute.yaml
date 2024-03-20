@@ -1,0 +1,10 @@
+apiVersion: tracing.orange.io/v1alpha1
+kind: Jaeger
+metadata:
+  name: distribute-es
+  namespace: default
+spec:
+  type: distribute
+  components:
+    storage:
+      type: elasticsearch

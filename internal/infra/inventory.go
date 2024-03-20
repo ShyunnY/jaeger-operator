@@ -3,7 +3,6 @@ package infra
 import (
 	"context"
 	"fmt"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -28,22 +27,25 @@ type InventoryObject struct {
 type Deployment struct {
 }
 
+// InventoryComputer TODO: 资源热更新问题:  apply之后, 资源并没有按照预期的更改
 type InventoryComputer struct {
-	namespace    string
-	instanceName string
+	instanceNamespace string
+	instanceName      string
 
 	cli client.Client
 }
 
 func (ic *InventoryComputer) ComputeHTTPRoutes(ctx context.Context, desires []*gtwapi.HTTPRoute) (*InventoryObject, error) {
 
+	// TODO: Migrate the list options to label.selector
+
 	list := &gtwapi.HTTPRouteList{}
 	if err := ic.cli.List(
 		ctx,
 		list,
-		client.InNamespace(ic.namespace),
+		client.InNamespace(ic.instanceNamespace),
 		client.MatchingLabels{
-			"app.kubernetes.io/name":       ic.instanceName,
+			"app.kubernetes.io/part-of":    "jaeger",
 			"app.kubernetes.io/managed-by": "jaeger-operator",
 		},
 	); err != nil {
@@ -77,7 +79,7 @@ func (ic *InventoryComputer) ComputeHTTPRoutes(ctx context.Context, desires []*g
 				}
 				dp.OwnerReferences = desire.OwnerReferences
 
-				dp.Spec = desire.Spec
+				dp.Spec = *desire.Spec.DeepCopy()
 
 				updates = append(updates, dp)
 				delete(mcreate, toNsName(&exist))
@@ -103,14 +105,16 @@ func (ic *InventoryComputer) ComputeHTTPRoutes(ctx context.Context, desires []*g
 
 func (ic *InventoryComputer) ComputeService(ctx context.Context, desires []*corev1.Service) (*InventoryObject, error) {
 
+	// TODO: Migrate the list options to label.selector
+
 	// Lists the Services managed by the current operator and whose instance is the current Jaeger
 	list := &corev1.ServiceList{}
 	if err := ic.cli.List(
 		ctx,
 		list,
-		client.InNamespace(ic.namespace),
+		client.InNamespace(ic.instanceNamespace),
 		client.MatchingLabels{
-			"app.kubernetes.io/name":       ic.instanceName,
+			"app.kubernetes.io/part-of":    "jaeger",
 			"app.kubernetes.io/managed-by": "jaeger-operator",
 		},
 	); err != nil {
@@ -175,16 +179,18 @@ func (ic *InventoryComputer) ComputeService(ctx context.Context, desires []*core
 
 func (ic *InventoryComputer) ComputeServiceAccount(ctx context.Context, desire *corev1.ServiceAccount) (*InventoryObject, error) {
 
+	// TODO: Migrate the list options to label.selector
+
 	// Lists the ServiceAccount managed by the current operator and whose instance is the current Jaeger
 	list := &corev1.ServiceAccountList{}
 	if err := ic.cli.List(
 		ctx,
 		list,
-		client.InNamespace(ic.namespace),
-		client.MatchingLabels(map[string]string{
-			"app.kubernetes.io/name":       ic.instanceName,
+		client.InNamespace(ic.instanceNamespace),
+		client.MatchingLabels{
+			"app.kubernetes.io/part-of":    "jaeger",
 			"app.kubernetes.io/managed-by": "jaeger-operator",
-		}),
+		},
 	); err != nil {
 
 		return nil, err
@@ -230,16 +236,18 @@ func (ic *InventoryComputer) ComputeServiceAccount(ctx context.Context, desire *
 
 func (ic *InventoryComputer) ComputeDeployment(ctx context.Context, desires []*appsv1.Deployment) (*InventoryObject, error) {
 
+	// TODO: Migrate the list options to label.selector
+
 	// Lists the Deployment managed by the current operator and whose instance is the current Jaeger
 	list := &appsv1.DeploymentList{}
 	if err := ic.cli.List(
 		ctx,
 		list,
-		client.InNamespace(ic.namespace),
-		client.MatchingLabels(map[string]string{
-			"app.kubernetes.io/name":       ic.instanceName,
+		client.InNamespace(ic.instanceNamespace),
+		client.MatchingLabels{
+			"app.kubernetes.io/part-of":    "jaeger",
 			"app.kubernetes.io/managed-by": "jaeger-operator",
-		}),
+		},
 	); err != nil {
 
 		return nil, err

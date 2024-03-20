@@ -20,7 +20,7 @@ const (
 	// TODO: Adding more components later?
 	collectorComponent = "collector"
 	queryComponent     = "query"
-	allIneOneComponent = "allInOne"
+	allIneOneComponent = "allinone"
 )
 
 const (

@@ -128,7 +128,7 @@ func TestAllInOneService(t *testing.T) {
 			services, err := tc.render.Service()
 			assert.NoError(t, err)
 
-			if false {
+			if true {
 				outYaml, err := yaml.Marshal(services)
 				assert.NoError(t, err)
 

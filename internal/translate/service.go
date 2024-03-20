@@ -16,6 +16,7 @@ func QueryService(instance *jaegerv1a1.Jaeger) *corev1.Service {
 	name := ComponentName(instance.Name, queryServiceType)
 	queryService := expectServiceSpec(
 		name,
+		jaegerv1a1.QueryServiceTarget,
 		instance,
 		convertServicePort(queryPorts),
 	)
@@ -36,6 +37,7 @@ func CollectorServices(instance *jaegerv1a1.Jaeger) []*corev1.Service {
 	collectorName := ComponentName(instance.Name, collectorServiceType)
 	collectorSvc := expectServiceSpec(
 		collectorName,
+		jaegerv1a1.CollectorServiceTarget,
 		instance,
 		convertServicePort(ports),
 	)
@@ -49,21 +51,22 @@ func CollectorServices(instance *jaegerv1a1.Jaeger) []*corev1.Service {
 	collectorHeadlessName := ComponentName(instance.Name, collectorServiceHeadlessType)
 	collectorHeadlessSvc := expectServiceSpec(
 		collectorHeadlessName,
+		jaegerv1a1.CollectorServiceTarget,
 		instance,
 		convertServicePort(ports),
 	)
 	collectorHeadlessSvc.Labels = labels
 	collectorHeadlessSvc.Annotations = annotations
 
-	// We set the cluster IP too NONE to provide a headless service
-	collectorHeadlessSvc.Spec.ClusterIP = "NONE"
+	// We set the cluster IP too None to provide a headless service
+	collectorHeadlessSvc.Spec.ClusterIP = "None"
 
 	retServices = append(retServices, collectorHeadlessSvc)
 
 	return retServices
 }
 
-func expectServiceSpec(name string, instance *jaegerv1a1.Jaeger, ports []corev1.ServicePort) *corev1.Service {
+func expectServiceSpec(name string, target jaegerv1a1.JaegerServiceTarget, instance *jaegerv1a1.Jaeger, ports []corev1.ServicePort) *corev1.Service {
 
 	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -73,9 +76,9 @@ func expectServiceSpec(name string, instance *jaegerv1a1.Jaeger, ports []corev1.
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: instance.Namespace,
-			Labels: map[string]string{
-				jaegerv1a1.ServiceTargetLabelKey: string(jaegerv1a1.CollectorServiceTarget),
-			},
+			Labels: utils.MergeCommonMap(map[string]string{
+				jaegerv1a1.ServiceTargetLabelKey: string(target),
+			}, ComponentLabels("service", name, instance)),
 			OwnerReferences: []metav1.OwnerReference{
 				GetOwnerRef(instance),
 			},
