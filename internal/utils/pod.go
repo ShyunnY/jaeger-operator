@@ -7,18 +7,14 @@ import (
 	"strings"
 )
 
-func MergePodArgs(args ...string) []string {
+func MergePodArgs(existArgs []string, args ...string) []string {
 
-	// default args
-	defaultArgs := []string{
-		"--memory.max-traces=100000",
-	}
 	if len(args) == 0 {
-		return defaultArgs
+		return existArgs
 	}
 
 	argsMap := argToMap(args)
-	for _, arg := range defaultArgs {
+	for _, arg := range existArgs {
 		split := strings.Split(arg, "=")
 
 		if _, ok := argsMap[split[0]]; !ok {
@@ -53,35 +49,14 @@ func mapToArgs(argsMap map[string]string) []string {
 	return args
 }
 
-func MergePodEnv(envs ...jaegerv1a1.EnvSetting) []corev1.EnvVar {
-
-	// default env
-	defaultEnvs := []corev1.EnvVar{
-		// By default, memory is used to store trace information
-		{
-			Name:  "SPAN_STORAGE_TYPE",
-			Value: "memory",
-		},
-		{
-			Name:  "COLLECTOR_ZIPKIN_HOST_PORT",
-			Value: ":9411",
-		},
-		{
-			Name:  "JAEGER_DISABLED",
-			Value: "false",
-		},
-		{
-			Name:  "COLLECTOR_OTLP_ENABLED",
-			Value: "true",
-		},
-	}
+func MergePodEnv(existEnvs []corev1.EnvVar, envs ...jaegerv1a1.EnvSetting) []jaegerv1a1.EnvSetting {
 
 	if len(envs) == 0 {
-		return defaultEnvs
+		return ConvertEnvSettings(existEnvs)
 	}
 
 	envsMap := envToMap(envs)
-	for _, v := range defaultEnvs {
+	for _, v := range existEnvs {
 		if _, ok := envsMap[v.Name]; !ok {
 			envsMap[v.Name] = v
 		}
@@ -104,12 +79,50 @@ func envToMap(envs []jaegerv1a1.EnvSetting) map[string]corev1.EnvVar {
 	return retMap
 }
 
-func mapToEnv(envsMap map[string]corev1.EnvVar) []corev1.EnvVar {
+func mapToEnv(envsMap map[string]corev1.EnvVar) []jaegerv1a1.EnvSetting {
 
 	envs := make([]corev1.EnvVar, 0, len(envsMap))
 	for _, envVar := range envsMap {
 		envs = append(envs, envVar)
 	}
 
-	return envs
+	return ConvertEnvSettings(envs)
+}
+
+func ConvertEnvVar(envs []jaegerv1a1.EnvSetting) []corev1.EnvVar {
+
+	if len(envs) == 0 {
+		return nil
+	}
+
+	ret := make([]corev1.EnvVar, 0, len(envs))
+	for _, env := range envs {
+		envVar := corev1.EnvVar{
+			Name:  env.Name,
+			Value: env.Value,
+		}
+
+		ret = append(ret, envVar)
+	}
+
+	return ret
+}
+
+func ConvertEnvSettings(envs []corev1.EnvVar) []jaegerv1a1.EnvSetting {
+
+	if len(envs) == 0 {
+		return nil
+	}
+
+	ret := make([]jaegerv1a1.EnvSetting, 0, len(envs))
+	for _, env := range envs {
+		envVar := jaegerv1a1.EnvSetting{
+			Name:  env.Name,
+			Value: env.Value,
+		}
+
+		ret = append(ret, envVar)
+	}
+
+	return ret
 }

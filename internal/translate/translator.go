@@ -2,15 +2,14 @@ package translate
 
 import (
 	"fmt"
-
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
 	"github.com/ShyunnY/jaeger-operator/internal/message"
 	"github.com/ShyunnY/jaeger-operator/internal/status"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Translator struct {
@@ -27,8 +26,12 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 
 	infraIR := new(message.InfraIR)
 	instance.Status.Phase = "Failed"
-
-	// Compute commonSpec and incorporate common metadata
+	defer func() {
+		t.StatusIRMap.Map.Store(types.NamespacedName{
+			Namespace: instance.Namespace,
+			Name:      instance.Name,
+		}, &instance.Status)
+	}()
 
 	infraIR.InstanceMedata = instance.ObjectMeta
 	infraIR.Strategy = string(instance.Spec.Type)
@@ -44,8 +47,9 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 			instance: instance,
 		}
 	default:
-		t.Logger.Info("failed to get strategy render")
+		t.Logger.Info("unsupported deployment strategy")
 
+		status.SetJaegerCondition(instance, "Error", metav1.ConditionFalse, "Translate", "unsupported deployment strategy")
 		return fmt.Errorf("current deployment type is not supported: %s", infraIR.Strategy)
 	}
 
@@ -112,9 +116,5 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 
 	// push ir
 	t.InfraIRMap.Store(instance.Name, infraIR)
-	t.StatusIRMap.Map.Store(types.NamespacedName{
-		Namespace: instance.Namespace,
-		Name:      instance.Name,
-	}, &instance.Status)
 	return nil
 }

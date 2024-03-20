@@ -3,6 +3,8 @@ package utils
 import (
 	"crypto/sha256"
 	"fmt"
+	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -59,4 +61,24 @@ func MergeCommonMap(exist map[string]string, append map[string]string) map[strin
 	}
 
 	return retMap
+}
+
+func AppendEnvs(envs []corev1.EnvVar, instance *jaegerv1a1.Jaeger) {
+
+	if len(envs) == 0 {
+		return
+	}
+
+	adds := make([]jaegerv1a1.EnvSetting, 0, len(envs))
+	for _, env := range envs {
+
+		envSetting := jaegerv1a1.EnvSetting{
+			Name:  env.Name,
+			Value: env.Value,
+		}
+
+		adds = append(adds, envSetting)
+	}
+
+	instance.Spec.Components.Collector.Envs = append(adds, instance.Spec.Components.Collector.Envs...)
 }

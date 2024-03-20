@@ -1,102 +1,102 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  annotations:
-    annotation-1: a-1
-    annotation-2: a-2
-  creationTimestamp: null
-  labels:
-    app: jaeger
-    app.kubernetes.io/component: deployment
-    app.kubernetes.io/managed-by: jaeger-operator
-    app.kubernetes.io/name: all-in-one
-    app.kubernetes.io/part-of: jaeger
-    label-1: l-1
-    label-2: l-2
-    tracing.orange.io/strategy: allInOne
-  name: all-in-one-default-allInOne
-  namespace: default
-  ownerReferences:
-  - apiVersion: tracing.orange.io/v1alpha1
-    controller: true
-    kind: Jaeger
-    name: all-in-one
-    uid: a98d5c73-8656-4035-be2f-0930f58bc89d
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      annotation-1: a-1
+      annotation-2: a-2
+    creationTimestamp: null
+    labels:
       app: jaeger
-      app.kubernetes.io/component: pod
+      app.kubernetes.io/component: deployment
       app.kubernetes.io/managed-by: jaeger-operator
-      app.kubernetes.io/name: all-in-one
+      app.kubernetes.io/name: all-in-one-default-allInOne
       app.kubernetes.io/part-of: jaeger
       label-1: l-1
       label-2: l-2
       tracing.orange.io/strategy: allInOne
-  strategy: {}
-  template:
-    metadata:
-      annotations:
-        annotation-1: a-1
-        annotation-2: a-2
-      creationTimestamp: null
-      labels:
+    name: all-in-one-default-allInOne
+    namespace: default
+    ownerReferences:
+    - apiVersion: tracing.orange.io/v1alpha1
+      controller: true
+      kind: Jaeger
+      name: all-in-one
+      uid: a98d5c73-8656-4035-be2f-0930f58bc89d
+  spec:
+    replicas: 3
+    selector:
+      matchLabels:
         app: jaeger
         app.kubernetes.io/component: pod
         app.kubernetes.io/managed-by: jaeger-operator
-        app.kubernetes.io/name: all-in-one
+        app.kubernetes.io/name: all-in-one-default-allInOne
         app.kubernetes.io/part-of: jaeger
         label-1: l-1
         label-2: l-2
         tracing.orange.io/strategy: allInOne
-    spec:
-      containers:
-      - args:
-        - --memory.max-traces=100000
-        env:
-        - name: SPAN_STORAGE_TYPE
-          value: memory
-        - name: COLLECTOR_ZIPKIN_HOST_PORT
-          value: :9411
-        - name: JAEGER_DISABLED
-          value: "false"
-        - name: COLLECTOR_OTLP_ENABLED
-          value: "true"
-        image: jaegertracing/all-in-one:1.55.0
-        livenessProbe:
-          failureThreshold: 5
-          httpGet:
-            path: /
-            port: 14269
-          initialDelaySeconds: 5
-          periodSeconds: 15
-        name: allInOne
-        ports:
-        - containerPort: 9411
-          name: zipkin
-          protocol: TCP
-        - containerPort: 14268
-          name: binary-thrift
-          protocol: TCP
-        - containerPort: 14269
-          name: admin-http
-          protocol: TCP
-        - containerPort: 4317
-          name: oltp-grpc
-          protocol: TCP
-        - containerPort: 4318
-          name: oltp-http
-          protocol: TCP
-        - containerPort: 16685
-          name: grpc-query
-          protocol: TCP
-        - containerPort: 16686
-          name: http-query
-          protocol: TCP
-        - containerPort: 16687
-          name: admin
-          protocol: TCP
-        resources: {}
-      serviceAccountName: all-in-one-default
-status: {}
+    strategy: {}
+    template:
+      metadata:
+        annotations:
+          annotation-1: a-1
+          annotation-2: a-2
+        creationTimestamp: null
+        labels:
+          app: jaeger
+          app.kubernetes.io/component: pod
+          app.kubernetes.io/managed-by: jaeger-operator
+          app.kubernetes.io/name: all-in-one-default-allInOne
+          app.kubernetes.io/part-of: jaeger
+          label-1: l-1
+          label-2: l-2
+          tracing.orange.io/strategy: allInOne
+      spec:
+        containers:
+        - args:
+          - --memory.max-traces=100000
+          env:
+          - name: SPAN_STORAGE_TYPE
+            value: memory
+          - name: COLLECTOR_ZIPKIN_HOST_PORT
+            value: :9411
+          - name: JAEGER_DISABLED
+            value: "false"
+          - name: COLLECTOR_OTLP_ENABLED
+            value: "true"
+          image: jaegertracing/all-in-one:1.55.0
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /
+              port: 14269
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          name: allInOne
+          ports:
+          - containerPort: 9411
+            name: zipkin
+            protocol: TCP
+          - containerPort: 14268
+            name: binary-thrift
+            protocol: TCP
+          - containerPort: 14269
+            name: admin-http
+            protocol: TCP
+          - containerPort: 4317
+            name: oltp-grpc
+            protocol: TCP
+          - containerPort: 4318
+            name: oltp-http
+            protocol: TCP
+          - containerPort: 16685
+            name: grpc-query
+            protocol: TCP
+          - containerPort: 16686
+            name: http-query
+            protocol: TCP
+          - containerPort: 16687
+            name: admin
+            protocol: TCP
+          resources: {}
+        serviceAccountName: all-in-one-default
+  status: {}

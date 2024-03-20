@@ -1,32 +1,39 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: all-in-one-collect
-  namespace: default
+  creationTimestamp: null
   labels:
     tracing.orange.io/service-target: collector
+  name: all-in-one-collector-svc
+  namespace: default
   ownerReferences:
-    - apiVersion: tracing.orange.io/v1alpha1
-      controller: true
-      kind: Jaeger
-      name: all-in-one
-      uid: a98d5c73-8656-4035-be2f-0930f58bc89d
+  - apiVersion: tracing.orange.io/v1alpha1
+    controller: true
+    kind: Jaeger
+    name: all-in-one
+    uid: a98d5c73-8656-4035-be2f-0930f58bc89d
 spec:
-  type: ClusterIP
   ports:
-    - name: zipkin
-      port: 9411
-      protocol: TCP
-      targetPort: 9411
-    - name: grpc
-      port: 14250
-      protocol: TCP
-      targetPort: 14250
-    - name: c-tchan-trft
-      port: 14267
-      protocol: TCP
-      targetPort: 14267
-    - name: c-binary-trft
-      port: 14268
-      protocol: TCP
-      targetPort: 14268
+  - name: zipkin
+    port: 9411
+    protocol: TCP
+    targetPort: 9411
+  - name: binary-thrift
+    port: 14268
+    protocol: TCP
+    targetPort: 14268
+  - name: admin-http
+    port: 14269
+    protocol: TCP
+    targetPort: 14269
+  - name: oltp-grpc
+    port: 4317
+    protocol: TCP
+    targetPort: 4317
+  - name: oltp-http
+    port: 4318
+    protocol: TCP
+    targetPort: 4318
+  type: ClusterIP
+status:
+  loadBalancer: {}

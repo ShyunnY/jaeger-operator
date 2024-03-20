@@ -42,3 +42,7 @@ func (j *Jaeger) GetCommonSpecLabels() map[string]string {
 func (j *Jaeger) GetCommonSpecAnnotations() map[string]string {
 	return j.Spec.CommonSpec.Metadata.Annotations
 }
+
+func (j *Jaeger) GetStorageType() StorageType {
+	return j.Spec.Components.Storage.Type
+}

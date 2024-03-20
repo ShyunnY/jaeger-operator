@@ -11,9 +11,6 @@ import (
 
 func allInOneDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 
-	// merge Envs and Args
-	envs := utils.MergePodEnv(instance.Spec.Components.AllInOne.Envs...)
-	args := utils.MergePodArgs(instance.Spec.Components.AllInOne.Args...)
 	// merge ports
 	ports := append(getCollectorPort(true), getQueryPort()...)
 
@@ -21,8 +18,8 @@ func allInOneDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 		// TODO: add more settings?
 		Name:  allIneOneComponent,
 		Image: "jaegertracing/all-in-one:1.55.0",
-		Args:  args,
-		Env:   envs,
+		Args:  instance.Spec.Components.AllInOne.Args,
+		Env:   utils.ConvertEnvVar(instance.Spec.Components.AllInOne.Envs),
 		Ports: ports,
 	}
 
@@ -32,19 +29,32 @@ func allInOneDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 	return deploy
 }
 
-func queryDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
-	// merge Envs and Args
-	args := utils.MergePodArgs(instance.Spec.Components.Query.Args...)
-	envs := utils.MergePodEnv(instance.Spec.Components.Query.Envs...)
+func QueryDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
+
 	// merge ports
 	ports := getQueryPort()
+
+	// set default envs
+	envs := utils.MergePodEnv(
+		[]corev1.EnvVar{
+			{
+				Name:  "JAEGER_SERVICE_NAME",
+				Value: NamespacedName(instance),
+			},
+			{
+				Name:  "JAEGER_PROPAGATION",
+				Value: "JAEGER_PROPAGATION",
+			},
+		},
+		instance.Spec.Components.Query.Envs...,
+	)
 
 	container := &corev1.Container{
 		// TODO: add more settings?
 		Name:  queryComponent,
 		Image: "jaegertracing/jaeger-query:1.55.0",
-		Args:  args,
-		Env:   envs,
+		Args:  instance.Spec.Components.Query.Args,
+		Env:   utils.ConvertEnvVar(envs),
 		Ports: ports,
 	}
 	deployName := ComponentName(NamespacedName(instance), queryComponent)
@@ -53,11 +63,8 @@ func queryDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 	return deploy
 }
 
-func collectorDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
+func CollectorDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 
-	// merge Envs and Args
-	args := utils.MergePodArgs(instance.Spec.Components.Collector.Args...)
-	envs := utils.MergePodEnv(instance.Spec.Components.Collector.Envs...)
 	// merge ports
 	ports := getCollectorPort(true)
 
@@ -65,8 +72,8 @@ func collectorDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 		// TODO: add more settings?
 		Name:  collectorComponent,
 		Image: "jaegertracing/jaeger-collector:1.55.0",
-		Args:  args,
-		Env:   envs,
+		Args:  instance.Spec.Components.Collector.Args,
+		Env:   utils.ConvertEnvVar(instance.Spec.Components.Collector.Envs),
 		Ports: ports,
 	}
 	deployName := ComponentName(NamespacedName(instance), collectorComponent)
@@ -86,11 +93,11 @@ func expectDeploySpec(name string, instance *jaegerv1a1.Jaeger, container *corev
 	}
 
 	if container.LivenessProbe == nil {
-		container.LivenessProbe = livenessProbe()
+		// container.LivenessProbe = livenessProbe()
 	}
 
-	deployLabels := ComponentLabels("deployment", instance)
-	podLabels := ComponentLabels("pod", instance)
+	deployLabels := ComponentLabels("deployment", name, instance)
+	podLabels := ComponentLabels("pod", name, instance)
 
 	return &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{

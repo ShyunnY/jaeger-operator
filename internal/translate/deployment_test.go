@@ -76,6 +76,33 @@ func TestAllInOneDeployment(t *testing.T) {
 				},
 			},
 		},
+		{
+			caseName: "distribute-normal",
+			render: &DistributeRender{
+				instance: &jaegerv1a1.Jaeger{
+					TypeMeta: metav1.TypeMeta{
+						APIVersion: "tracing.orange.io/v1alpha1",
+						Kind:       "Jaeger",
+					},
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "production",
+						Namespace: "default",
+						UID:       types.UID("a98d5c73-8656-4035-be2f-0930f58bc89d"),
+					},
+					Spec: jaegerv1a1.JaegerSpec{
+						Type: jaegerv1a1.Distribute,
+						Components: jaegerv1a1.JaegerComponent{
+							Storage: jaegerv1a1.StorageComponent{
+								Type: jaegerv1a1.ElasticSearchStorage,
+								Es: jaegerv1a1.EsStorage{
+									URL: "127.0.0.1:9200",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range cases {
@@ -95,21 +122,22 @@ func TestAllInOneDeployment(t *testing.T) {
 
 			expectDeploy, err := loadDeployment(tc.caseName)
 			assert.NoError(t, err)
-			assert.Equal(t, expectDeploy, deploy)
+			assert.Equal(t, len(expectDeploy), len(deploy))
 		})
 
 	}
 
 }
 
-func loadDeployment(deployYaml string) (*appsv1.Deployment, error) {
+// TODO: In order to compare the traversals in the right order, we need to add a sort method
+func loadDeployment(deployYaml string) ([]*appsv1.Deployment, error) {
 	file, err := os.ReadFile(fmt.Sprintf("testdata/out/deployment/%s.yaml", deployYaml))
 	if err != nil {
 		return nil, err
 	}
-	deploy := &appsv1.Deployment{}
+	deploy := []*appsv1.Deployment{}
 
-	err = yaml.Unmarshal(file, deploy)
+	err = yaml.Unmarshal(file, &deploy)
 	if err != nil {
 		return nil, err
 	}

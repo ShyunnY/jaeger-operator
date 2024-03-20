@@ -1,0 +1,160 @@
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: jaeger
+      app.kubernetes.io/component: deployment
+      app.kubernetes.io/managed-by: jaeger-operator
+      app.kubernetes.io/name: production-default-query
+      app.kubernetes.io/part-of: jaeger
+      tracing.orange.io/strategy: distribute
+    name: production-default-query
+    namespace: default
+    ownerReferences:
+    - apiVersion: tracing.orange.io/v1alpha1
+      controller: true
+      kind: Jaeger
+      name: production
+      uid: a98d5c73-8656-4035-be2f-0930f58bc89d
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: jaeger
+        app.kubernetes.io/component: pod
+        app.kubernetes.io/managed-by: jaeger-operator
+        app.kubernetes.io/name: production-default-query
+        app.kubernetes.io/part-of: jaeger
+        tracing.orange.io/strategy: distribute
+    strategy: {}
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: jaeger
+          app.kubernetes.io/component: pod
+          app.kubernetes.io/managed-by: jaeger-operator
+          app.kubernetes.io/name: production-default-query
+          app.kubernetes.io/part-of: jaeger
+          tracing.orange.io/strategy: distribute
+      spec:
+        containers:
+        - args:
+          - --es.server-urls=127.0.0.1:9200
+          env:
+          - name: JAEGER_DISABLED
+            value: "false"
+          - name: COLLECTOR_OTLP_ENABLED
+            value: "true"
+          - name: JAEGER_SERVICE_NAME
+            value: production-default
+          - name: JAEGER_PROPAGATION
+            value: JAEGER_PROPAGATION
+          - name: SPAN_STORAGE_TYPE
+            value: elasticsearch
+          - name: COLLECTOR_ZIPKIN_HOST_PORT
+            value: :9411
+          image: jaegertracing/jaeger-query:1.55.0
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /
+              port: 14269
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          name: query
+          ports:
+          - containerPort: 16685
+            name: grpc-query
+            protocol: TCP
+          - containerPort: 16686
+            name: http-query
+            protocol: TCP
+          - containerPort: 16687
+            name: admin
+            protocol: TCP
+          resources: {}
+        serviceAccountName: production-default
+  status: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: jaeger
+      app.kubernetes.io/component: deployment
+      app.kubernetes.io/managed-by: jaeger-operator
+      app.kubernetes.io/name: production-default-collector
+      app.kubernetes.io/part-of: jaeger
+      tracing.orange.io/strategy: distribute
+    name: production-default-collector
+    namespace: default
+    ownerReferences:
+    - apiVersion: tracing.orange.io/v1alpha1
+      controller: true
+      kind: Jaeger
+      name: production
+      uid: a98d5c73-8656-4035-be2f-0930f58bc89d
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: jaeger
+        app.kubernetes.io/component: pod
+        app.kubernetes.io/managed-by: jaeger-operator
+        app.kubernetes.io/name: production-default-collector
+        app.kubernetes.io/part-of: jaeger
+        tracing.orange.io/strategy: distribute
+    strategy: {}
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: jaeger
+          app.kubernetes.io/component: pod
+          app.kubernetes.io/managed-by: jaeger-operator
+          app.kubernetes.io/name: production-default-collector
+          app.kubernetes.io/part-of: jaeger
+          tracing.orange.io/strategy: distribute
+      spec:
+        containers:
+        - args:
+          - --es.server-urls=127.0.0.1:9200
+          env:
+          - name: SPAN_STORAGE_TYPE
+            value: elasticsearch
+          - name: COLLECTOR_ZIPKIN_HOST_PORT
+            value: :9411
+          - name: JAEGER_DISABLED
+            value: "false"
+          - name: COLLECTOR_OTLP_ENABLED
+            value: "true"
+          image: jaegertracing/jaeger-collector:1.55.0
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /
+              port: 14269
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          name: collector
+          ports:
+          - containerPort: 9411
+            name: zipkin
+            protocol: TCP
+          - containerPort: 14268
+            name: binary-thrift
+            protocol: TCP
+          - containerPort: 14269
+            name: admin-http
+            protocol: TCP
+          - containerPort: 4317
+            name: oltp-grpc
+            protocol: TCP
+          - containerPort: 4318
+            name: oltp-http
+            protocol: TCP
+          resources: {}
+        serviceAccountName: production-default
+  status: {}

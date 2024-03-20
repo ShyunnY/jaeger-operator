@@ -118,8 +118,15 @@ type StorageComponent struct {
 	// Type Define backend storage type
 	Type StorageType
 
-	// Type Define backend storage options
+	// Es Define backend storage is elasticsearch
+	Es EsStorage
+
+	// Options Define backend storage options
 	Options []string
+}
+
+type EsStorage struct {
+	URL string
 }
 
 type StorageType string
@@ -127,7 +134,7 @@ type StorageType string
 var (
 	MemoryStorageType StorageType = "memory"
 
-	ElasticSarchStorage StorageType = "elasticsearch"
+	ElasticSearchStorage StorageType = "elasticsearch"
 )
 
 // CommonSpec Define Generic configuration of Kubernetes components

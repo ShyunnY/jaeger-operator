@@ -2,7 +2,6 @@ package translate
 
 import (
 	"github.com/ShyunnY/jaeger-operator/internal/utils"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -14,14 +13,13 @@ import (
 func QueryService(instance *jaegerv1a1.Jaeger) *corev1.Service {
 
 	queryPorts := getQueryPort()
+	name := ComponentName(instance.Name, queryServiceType)
 	queryService := expectServiceSpec(
-		ComponentName(instance.Name, queryServiceType),
+		name,
 		instance,
 		convertServicePort(queryPorts),
 	)
 
-	selector := ComponentLabels("pod", instance)
-	queryService.Spec.Selector = selector
 	queryService.Labels = utils.MergeCommonMap(queryService.Labels, instance.GetCommonSpecLabels())
 	queryService.Annotations = utils.MergeCommonMap(queryService.Annotations, instance.GetAnnotations())
 
@@ -33,15 +31,14 @@ func QueryService(instance *jaegerv1a1.Jaeger) *corev1.Service {
 func CollectorServices(instance *jaegerv1a1.Jaeger) []*corev1.Service {
 
 	var retServices []*corev1.Service
-
 	ports := getCollectorPort(true)
-	selector := ComponentLabels("pod", instance)
+
+	collectorName := ComponentName(instance.Name, collectorServiceType)
 	collectorSvc := expectServiceSpec(
-		ComponentName(instance.Name, collectorServiceType),
+		collectorName,
 		instance,
 		convertServicePort(ports),
 	)
-
 	labels := utils.MergeCommonMap(collectorSvc.Labels, instance.GetCommonSpecLabels())
 	annotations := utils.MergeCommonMap(collectorSvc.Annotations, instance.GetAnnotations())
 
@@ -49,12 +46,12 @@ func CollectorServices(instance *jaegerv1a1.Jaeger) []*corev1.Service {
 	collectorSvc.Annotations = annotations
 	retServices = append(retServices, collectorSvc)
 
+	collectorHeadlessName := ComponentName(instance.Name, collectorServiceHeadlessType)
 	collectorHeadlessSvc := expectServiceSpec(
-		ComponentName(instance.Name, collectorServiceHeadlessType),
+		collectorHeadlessName,
 		instance,
 		convertServicePort(ports),
 	)
-	collectorHeadlessSvc.Spec.Selector = selector
 	collectorHeadlessSvc.Labels = labels
 	collectorHeadlessSvc.Annotations = annotations
 
@@ -84,9 +81,8 @@ func expectServiceSpec(name string, instance *jaegerv1a1.Jaeger, ports []corev1.
 			},
 		},
 		Spec: corev1.ServiceSpec{
-			Type:      serviceType(instance),
-			Ports:     ports,
-			ClusterIP: "None",
+			Type:  serviceType(instance),
+			Ports: ports,
 		},
 	}
 }

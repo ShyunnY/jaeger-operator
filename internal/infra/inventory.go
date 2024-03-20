@@ -15,7 +15,7 @@ var _ Inventory = (*InventoryComputer)(nil)
 type Inventory interface {
 	ComputeServiceAccount(ctx context.Context, desire *corev1.ServiceAccount) (*InventoryObject, error)
 	ComputeService(ctx context.Context, desire []*corev1.Service) (*InventoryObject, error)
-	ComputeDeployment(ctx context.Context, desire *appsv1.Deployment) (*InventoryObject, error)
+	ComputeDeployment(ctx context.Context, desire []*appsv1.Deployment) (*InventoryObject, error)
 	ComputeHTTPRoutes(ctx context.Context, desire []*gtwapi.HTTPRoute) (*InventoryObject, error)
 }
 
@@ -131,6 +131,7 @@ func (ic *InventoryComputer) ComputeService(ctx context.Context, desires []*core
 	} else {
 		for i := range list.Items {
 			exist := list.Items[i]
+
 			if desire, ok := mcreate[toNsName(&exist)]; ok {
 				dp := exist.DeepCopy()
 
@@ -227,7 +228,7 @@ func (ic *InventoryComputer) ComputeServiceAccount(ctx context.Context, desire *
 	}, nil
 }
 
-func (ic *InventoryComputer) ComputeDeployment(ctx context.Context, desire *appsv1.Deployment) (*InventoryObject, error) {
+func (ic *InventoryComputer) ComputeDeployment(ctx context.Context, desires []*appsv1.Deployment) (*InventoryObject, error) {
 
 	// Lists the Deployment managed by the current operator and whose instance is the current Jaeger
 	list := &appsv1.DeploymentList{}
@@ -244,19 +245,23 @@ func (ic *InventoryComputer) ComputeDeployment(ctx context.Context, desire *apps
 		return nil, err
 	}
 
-	createObjs := []client.Object{desire}
-	updateObjs := []client.Object{}
-	deleteObjs := []client.Object{desire}
+	updates := []client.Object{}
+	mcreate := make(map[string]*appsv1.Deployment, len(desires))
+	mdelete := make(map[string]*appsv1.Deployment, len(desires))
+	for i := range desires {
+		desire := desires[i]
+		mcreate[toNsName(desire)] = desire
+		mdelete[toNsName(desire)] = desire
+	}
 
 	if len(list.Items) == 0 {
-		deleteObjs = nil
+		clear(mdelete)
 	} else {
 		for i := range list.Items {
-			item := list.Items[i]
+			exist := list.Items[i]
 
-			// Check the Namespaced names of both
-			if toNsName(&item) == toNsName(desire) {
-				dp := item.DeepCopy()
+			if desire, ok := mcreate[toNsName(&exist)]; ok {
+				dp := desire.DeepCopy()
 				dp.SetLabels(map[string]string{})
 				dp.SetAnnotations(map[string]string{})
 
@@ -271,15 +276,24 @@ func (ic *InventoryComputer) ComputeDeployment(ctx context.Context, desire *apps
 					dp.Annotations[k] = v
 				}
 
-				createObjs = nil
-				deleteObjs = nil
+				updates = append(updates, dp)
+				delete(mcreate, toNsName(&exist))
+				delete(mdelete, toNsName(&exist))
 			}
 		}
 	}
 
+	createObjs := []client.Object{}
+	deleteObjs := []client.Object{}
+	for _, service := range mcreate {
+		createObjs = append(createObjs, service)
+	}
+	for _, service := range mdelete {
+		deleteObjs = append(deleteObjs, service)
+	}
 	return &InventoryObject{
 		CreateObjects: createObjs,
-		UpdateObjects: updateObjs,
+		UpdateObjects: updates,
 		DeleteObjects: deleteObjs,
 	}, nil
 

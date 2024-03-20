@@ -24,7 +24,7 @@ type InfraIR struct {
 	Strategy       string
 	InstanceMedata metav1.ObjectMeta
 
-	Deployment     *appsv1.Deployment
+	Deployment     []*appsv1.Deployment
 	ConfigMap      *corev1.ConfigMap
 	Service        []*corev1.Service
 	ServiceAccount *corev1.ServiceAccount
@@ -50,7 +50,7 @@ func (ir *InfraIR) AddResources(obj any) {
 	}
 
 	switch resource := obj.(type) {
-	case *appsv1.Deployment:
+	case []*appsv1.Deployment:
 		ir.Deployment = resource
 	case *corev1.ConfigMap:
 		ir.ConfigMap = resource

@@ -12,9 +12,10 @@ import (
 )
 
 var _ StrategyRender = (*AllInOneRender)(nil)
+var _ StrategyRender = (*DistributeRender)(nil)
 
 type StrategyRender interface {
-	Deployment() (*appsv1.Deployment, error)
+	Deployment() ([]*appsv1.Deployment, error)
 	ServiceAccount() (*corev1.ServiceAccount, error)
 	ConfigMap() (*corev1.ConfigMap, error)
 	Service() ([]*corev1.Service, error)
@@ -44,10 +45,10 @@ func GetStrategy(instance *jaegerv1a1.Jaeger) string {
 	return string(instance.GetDeploymentType())
 }
 
-func ComponentLabels(component string, instance *jaegerv1a1.Jaeger) map[string]string {
+func ComponentLabels(component string, componentName string, instance *jaegerv1a1.Jaeger) map[string]string {
 	return utils.MergeCommonMap(
 		utils.Labels(
-			instance.Name, component,
+			componentName, component,
 			GetStrategy(instance)),
 		instance.GetCommonSpecLabels(),
 	)

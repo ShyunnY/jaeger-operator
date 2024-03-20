@@ -11,8 +11,9 @@ type AllInOneRender struct {
 }
 
 // Deployment Returns the Deployment of the expected AllInOne Strategy
-func (r *AllInOneRender) Deployment() (*appsv1.Deployment, error) {
-	return allInOneDeploy(r.instance), nil
+func (r *AllInOneRender) Deployment() ([]*appsv1.Deployment, error) {
+	buildOptions(r.instance)
+	return []*appsv1.Deployment{allInOneDeploy(r.instance)}, nil
 }
 
 // ConfigMap Returns the ConfigMap of the expected AllInOne Strategy
@@ -24,15 +25,23 @@ func (r *AllInOneRender) ConfigMap() (*corev1.ConfigMap, error) {
 func (r *AllInOneRender) Service() ([]*corev1.Service, error) {
 
 	services := []*corev1.Service{}
-
+	selector := ComponentLabels(
+		"pod",
+		ComponentName(NamespacedName(r.instance), allIneOneComponent),
+		r.instance,
+	)
 	// In allInOne deployment mode, we build three Service: Query,Collector,Collector-Headless
 	// In fact, all three services choose the Pod deployed by the same Deployment
 	for _, collectorSvc := range CollectorServices(r.instance) {
 		collectorSvc := collectorSvc
+		collectorSvc.Spec.Selector = selector
 		services = append(services, collectorSvc)
 	}
 
-	return append(services, QueryService(r.instance)), nil
+	queryService := QueryService(r.instance)
+	queryService.Spec.Selector = selector
+
+	return append(services, queryService), nil
 }
 
 // ServiceAccount Returns the ServiceAccount of the expected AllInOne Strategy
