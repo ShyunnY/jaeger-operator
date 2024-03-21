@@ -1,19 +1,20 @@
 package translate
 
 import (
-	"github.com/ShyunnY/jaeger-operator/internal/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
+	"github.com/ShyunnY/jaeger-operator/internal/consts"
+	"github.com/ShyunnY/jaeger-operator/internal/utils"
 )
 
 // QueryService Build a Service for accessing Jaeger queries
 func QueryService(instance *jaegerv1a1.Jaeger) *corev1.Service {
 
 	queryPorts := getQueryPort()
-	name := ComponentName(instance.Name, queryServiceType)
+	name := ComponentName(instance.Name, consts.QueryServiceType)
 	queryService := expectServiceSpec(
 		name,
 		jaegerv1a1.QueryServiceTarget,
@@ -34,7 +35,7 @@ func CollectorServices(instance *jaegerv1a1.Jaeger) []*corev1.Service {
 	var retServices []*corev1.Service
 	ports := getCollectorPort(true)
 
-	collectorName := ComponentName(instance.Name, collectorServiceType)
+	collectorName := ComponentName(instance.Name, consts.CollectorServiceType)
 	collectorSvc := expectServiceSpec(
 		collectorName,
 		jaegerv1a1.CollectorServiceTarget,
@@ -48,7 +49,7 @@ func CollectorServices(instance *jaegerv1a1.Jaeger) []*corev1.Service {
 	collectorSvc.Annotations = annotations
 	retServices = append(retServices, collectorSvc)
 
-	collectorHeadlessName := ComponentName(instance.Name, collectorServiceHeadlessType)
+	collectorHeadlessName := ComponentName(instance.Name, consts.CollectorServiceHeadlessType)
 	collectorHeadlessSvc := expectServiceSpec(
 		collectorHeadlessName,
 		jaegerv1a1.CollectorServiceTarget,

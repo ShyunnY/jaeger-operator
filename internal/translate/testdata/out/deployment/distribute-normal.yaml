@@ -43,6 +43,10 @@
         - args:
           - --es.server-urls=127.0.0.1:9200
           env:
+          - name: SPAN_STORAGE_TYPE
+            value: elasticsearch
+          - name: COLLECTOR_ZIPKIN_HOST_PORT
+            value: :9411
           - name: JAEGER_DISABLED
             value: "false"
           - name: COLLECTOR_OTLP_ENABLED
@@ -51,18 +55,7 @@
             value: production-default
           - name: JAEGER_PROPAGATION
             value: JAEGER_PROPAGATION
-          - name: SPAN_STORAGE_TYPE
-            value: elasticsearch
-          - name: COLLECTOR_ZIPKIN_HOST_PORT
-            value: :9411
           image: jaegertracing/jaeger-query:1.55.0
-          livenessProbe:
-            failureThreshold: 5
-            httpGet:
-              path: /
-              port: 14269
-            initialDelaySeconds: 5
-            periodSeconds: 15
           name: query
           ports:
           - containerPort: 16685
@@ -131,13 +124,6 @@
           - name: COLLECTOR_OTLP_ENABLED
             value: "true"
           image: jaegertracing/jaeger-collector:1.55.0
-          livenessProbe:
-            failureThreshold: 5
-            httpGet:
-              path: /
-              port: 14269
-            initialDelaySeconds: 5
-            periodSeconds: 15
           name: collector
           ports:
           - containerPort: 9411

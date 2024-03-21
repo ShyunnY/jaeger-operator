@@ -3,63 +3,74 @@ package utils
 import (
 	"testing"
 
-	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+
+	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 )
 
 func TestMergePodEnv(t *testing.T) {
 
 	cases := []struct {
 		caseName string
-		envs     []jaegerv1a1.EnvSetting
-		expect   []corev1.EnvVar
+		exist    []corev1.EnvVar
+		appended []jaegerv1a1.EnvSetting
+		expected []jaegerv1a1.EnvSetting
 	}{
 		{
-			caseName: "envs is empty",
-			envs:     nil,
-			expect: []corev1.EnvVar{
+			caseName: "append is empty",
+			exist: []corev1.EnvVar{
 				{
-					Name:  "SPAN_STORAGE_TYPE",
-					Value: "memory",
+					Name:  "env-a",
+					Value: "a",
 				},
 				{
-					Name:  "COLLECTOR_ZIPKIN_HOST_PORT",
-					Value: ":9411",
+					Name:  "env-b",
+					Value: "b",
+				},
+			},
+			appended: nil,
+			expected: []jaegerv1a1.EnvSetting{
+				{
+					Name:  "env-a",
+					Value: "a",
 				},
 				{
-					Name:  "JAEGER_DISABLED",
-					Value: "false",
-				},
-				{
-					Name:  "COLLECTOR_OTLP_ENABLED",
-					Value: "true",
+					Name:  "env-b",
+					Value: "b",
 				},
 			},
 		},
 		{
-			caseName: "envs is not empty",
-			envs: []jaegerv1a1.EnvSetting{
+			caseName: "append is not-empty",
+			exist: []corev1.EnvVar{
 				{
-					Name:  "JAEGER_DISABLED",
-					Value: "true",
+					Name:  "env-a",
+					Value: "a",
+				},
+				{
+					Name:  "env-b",
+					Value: "b",
 				},
 			},
-			expect: []corev1.EnvVar{
+			appended: []jaegerv1a1.EnvSetting{
 				{
-					Name:  "SPAN_STORAGE_TYPE",
-					Value: "memory",
+					Name:  "env-c",
+					Value: "c",
+				},
+			},
+			expected: []jaegerv1a1.EnvSetting{
+				{
+					Name:  "env-a",
+					Value: "a",
 				},
 				{
-					Name:  "COLLECTOR_ZIPKIN_HOST_PORT",
-					Value: ":9411",
+					Name:  "env-b",
+					Value: "b",
 				},
 				{
-					Name:  "JAEGER_DISABLED",
-					Value: "true",
-				},
-				{
-					Name:  "COLLECTOR_OTLP_ENABLED",
-					Value: "true",
+					Name:  "env-c",
+					Value: "c",
 				},
 			},
 		},
@@ -68,58 +79,47 @@ func TestMergePodEnv(t *testing.T) {
 	for _, tc := range cases {
 
 		t.Run(tc.caseName, func(t *testing.T) {
-			//actual := MergePodEnv(tc.envs...)
-			//assert.True(t, checkEnv(actual, tc.expect))
+			actual := MergePodEnv(tc.exist, tc.appended...)
+			assert.Equal(t, tc.expected, actual)
 		})
 
 	}
 
 }
 
-func checkEnv(actual, expect []corev1.EnvVar) bool {
-
-	actualMap := make(map[string]corev1.EnvVar)
-	expectMap := make(map[string]corev1.EnvVar)
-
-	for _, envVar := range actual {
-		actualMap[envVar.Name] = envVar
-	}
-
-	for _, envVar := range expect {
-		expectMap[envVar.Name] = envVar
-	}
-
-	for k, envVar := range actualMap {
-		if expectEnv, ok := expectMap[k]; !ok || envVar.Name != expectEnv.Name || envVar.Value != expectEnv.Value {
-			return false
-		}
-	}
-
-	return true
-}
-
 func TestMergePodArgs(t *testing.T) {
 
 	cases := []struct {
 		caseName string
-		args     []string
+		exist    []string
+		appended []string
 		expect   []string
 	}{
 		{
-			caseName: "envs is empty",
-			args:     nil,
+			caseName: "append is empty",
+			exist: []string{
+				"-a",
+				"-b",
+			},
+			appended: nil,
 			expect: []string{
-				"--memory.max-traces=100000",
+				"-a",
+				"-b",
 			},
 		},
 		{
-			caseName: "envs is empty",
-			args: []string{
-				"--sampling.strategies-file=/etc/jaeger/sampling/sampling.json",
+			caseName: "append is not-empty",
+			exist: []string{
+				"-a",
+				"-b",
+			},
+			appended: []string{
+				"-c",
 			},
 			expect: []string{
-				"--memory.max-traces=100000",
-				"--sampling.strategies-file=/etc/jaeger/sampling/sampling.json",
+				"-a",
+				"-b",
+				"-c",
 			},
 		},
 	}
@@ -127,8 +127,8 @@ func TestMergePodArgs(t *testing.T) {
 	for _, tc := range cases {
 
 		t.Run(tc.caseName, func(t *testing.T) {
-			//actual := MergePodArgs(tc.args...)
-			//assert.Equal(t, tc.expect, actual)
+			actual := MergePodArgs(tc.exist, tc.appended...)
+			assert.Equal(t, tc.expect, actual)
 		})
 
 	}

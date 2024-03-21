@@ -1,12 +1,14 @@
 package translate
 
 import (
-	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
-	"github.com/ShyunnY/jaeger-operator/internal/utils"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
+	"github.com/ShyunnY/jaeger-operator/internal/consts"
+	"github.com/ShyunnY/jaeger-operator/internal/utils"
 )
 
 func allInOneDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
@@ -16,14 +18,14 @@ func allInOneDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 
 	container := &corev1.Container{
 		// TODO: add more settings?
-		Name:  allIneOneComponent,
+		Name:  consts.AllIneOneComponent,
 		Image: "jaegertracing/all-in-one:1.55.0",
 		Args:  instance.Spec.Components.AllInOne.Args,
 		Env:   utils.ConvertEnvVar(instance.Spec.Components.AllInOne.Envs),
 		Ports: ports,
 	}
 
-	deployName := ComponentName(NamespacedName(instance), allIneOneComponent)
+	deployName := ComponentName(NamespacedName(instance), consts.AllIneOneComponent)
 	deploy := expectDeploySpec(deployName, instance, container)
 
 	return deploy
@@ -51,13 +53,13 @@ func QueryDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 
 	container := &corev1.Container{
 		// TODO: add more settings?
-		Name:  queryComponent,
+		Name:  consts.QueryComponent,
 		Image: "jaegertracing/jaeger-query:1.55.0",
 		Args:  instance.Spec.Components.Query.Args,
 		Env:   utils.ConvertEnvVar(envs),
 		Ports: ports,
 	}
-	deployName := ComponentName(NamespacedName(instance), queryComponent)
+	deployName := ComponentName(NamespacedName(instance), consts.QueryComponent)
 	deploy := expectDeploySpec(deployName, instance, container)
 
 	return deploy
@@ -70,13 +72,13 @@ func CollectorDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 
 	container := &corev1.Container{
 		// TODO: add more settings?
-		Name:  collectorComponent,
+		Name:  consts.CollectorComponent,
 		Image: "jaegertracing/jaeger-collector:1.55.0",
 		Args:  instance.Spec.Components.Collector.Args,
 		Env:   utils.ConvertEnvVar(instance.Spec.Components.Collector.Envs),
 		Ports: ports,
 	}
-	deployName := ComponentName(NamespacedName(instance), collectorComponent)
+	deployName := ComponentName(NamespacedName(instance), consts.CollectorComponent)
 	deploy := expectDeploySpec(deployName, instance, container)
 
 	return deploy
@@ -134,12 +136,13 @@ func expectDeploySpec(name string, instance *jaegerv1a1.Jaeger, container *corev
 	}
 }
 
+// TODO: 不同的Jaeger组件有不同的admin端口, 我们应该根据外部传入端口进行构建
 func livenessProbe() *corev1.Probe {
 	return &corev1.Probe{
 		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: "/",
-				Port: intstr.FromInt32(adminPort),
+				Port: intstr.FromInt32(consts.AdminPort),
 			},
 		},
 		InitialDelaySeconds: 5,

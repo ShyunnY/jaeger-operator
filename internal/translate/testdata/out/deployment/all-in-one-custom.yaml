@@ -9,12 +9,12 @@
       app: jaeger
       app.kubernetes.io/component: deployment
       app.kubernetes.io/managed-by: jaeger-operator
-      app.kubernetes.io/name: all-in-one-default-allInOne
+      app.kubernetes.io/name: all-in-one-default-allinone
       app.kubernetes.io/part-of: jaeger
       label-1: l-1
       label-2: l-2
       tracing.orange.io/strategy: allInOne
-    name: all-in-one-default-allInOne
+    name: all-in-one-default-allinone
     namespace: default
     ownerReferences:
     - apiVersion: tracing.orange.io/v1alpha1
@@ -29,7 +29,7 @@
         app: jaeger
         app.kubernetes.io/component: pod
         app.kubernetes.io/managed-by: jaeger-operator
-        app.kubernetes.io/name: all-in-one-default-allInOne
+        app.kubernetes.io/name: all-in-one-default-allinone
         app.kubernetes.io/part-of: jaeger
         label-1: l-1
         label-2: l-2
@@ -45,7 +45,7 @@
           app: jaeger
           app.kubernetes.io/component: pod
           app.kubernetes.io/managed-by: jaeger-operator
-          app.kubernetes.io/name: all-in-one-default-allInOne
+          app.kubernetes.io/name: all-in-one-default-allinone
           app.kubernetes.io/part-of: jaeger
           label-1: l-1
           label-2: l-2
@@ -64,14 +64,7 @@
           - name: COLLECTOR_OTLP_ENABLED
             value: "true"
           image: jaegertracing/all-in-one:1.55.0
-          livenessProbe:
-            failureThreshold: 5
-            httpGet:
-              path: /
-              port: 14269
-            initialDelaySeconds: 5
-            periodSeconds: 15
-          name: allInOne
+          name: allinone
           ports:
           - containerPort: 9411
             name: zipkin

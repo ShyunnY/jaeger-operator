@@ -1,9 +1,11 @@
 package translate
 
 import (
-	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+
+	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
+	"github.com/ShyunnY/jaeger-operator/internal/consts"
 )
 
 type AllInOneRender struct {
@@ -27,7 +29,7 @@ func (r *AllInOneRender) Service() ([]*corev1.Service, error) {
 	services := []*corev1.Service{}
 	selector := ComponentLabels(
 		"pod",
-		ComponentName(NamespacedName(r.instance), allIneOneComponent),
+		ComponentName(NamespacedName(r.instance), consts.AllIneOneComponent),
 		r.instance,
 	)
 	// In allInOne deployment mode, we build three Service: Query,Collector,Collector-Headless

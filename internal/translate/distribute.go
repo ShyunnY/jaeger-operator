@@ -1,9 +1,11 @@
 package translate
 
 import (
-	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+
+	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
+	"github.com/ShyunnY/jaeger-operator/internal/consts"
 )
 
 type DistributeRender struct {
@@ -33,7 +35,7 @@ func (d *DistributeRender) Service() ([]*corev1.Service, error) {
 	services := []*corev1.Service{}
 	selector := ComponentLabels(
 		"pod",
-		ComponentName(NamespacedName(d.instance), collectorComponent),
+		ComponentName(NamespacedName(d.instance), consts.CollectorComponent),
 		d.instance,
 	)
 
@@ -48,7 +50,7 @@ func (d *DistributeRender) Service() ([]*corev1.Service, error) {
 	queryService := QueryService(d.instance)
 	queryService.Spec.Selector = ComponentLabels(
 		"pod",
-		ComponentName(NamespacedName(d.instance), queryComponent),
+		ComponentName(NamespacedName(d.instance), consts.QueryComponent),
 		d.instance,
 	)
 

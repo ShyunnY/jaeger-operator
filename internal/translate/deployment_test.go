@@ -111,7 +111,7 @@ func TestAllInOneDeployment(t *testing.T) {
 			deploy, err := tc.render.Deployment()
 			assert.NoError(t, err)
 
-			if false {
+			if true {
 				outYaml, err := yaml.Marshal(deploy)
 				assert.NoError(t, err)
 
