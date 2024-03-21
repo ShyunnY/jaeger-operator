@@ -3,8 +3,10 @@ package infra
 import (
 	"context"
 	"fmt"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	gtwapi "sigs.k8s.io/gateway-api/apis/v1"
 )
@@ -37,16 +39,15 @@ type InventoryComputer struct {
 
 func (ic *InventoryComputer) ComputeHTTPRoutes(ctx context.Context, desires []*gtwapi.HTTPRoute) (*InventoryObject, error) {
 
-	// TODO: Migrate the list options to label.selector
-
+	// Lists the HTTPRoutes managed by the current operator and whose instance is the current Jaeger
 	list := &gtwapi.HTTPRouteList{}
+	selector := labels.NewSelector().Add(ListOptions("httproute")...)
 	if err := ic.cli.List(
 		ctx,
 		list,
 		client.InNamespace(ic.instanceNamespace),
-		client.MatchingLabels{
-			"app.kubernetes.io/part-of":    "jaeger",
-			"app.kubernetes.io/managed-by": "jaeger-operator",
+		client.MatchingLabelsSelector{
+			Selector: selector,
 		},
 	); err != nil {
 		return nil, err
@@ -105,17 +106,15 @@ func (ic *InventoryComputer) ComputeHTTPRoutes(ctx context.Context, desires []*g
 
 func (ic *InventoryComputer) ComputeService(ctx context.Context, desires []*corev1.Service) (*InventoryObject, error) {
 
-	// TODO: Migrate the list options to label.selector
-
 	// Lists the Services managed by the current operator and whose instance is the current Jaeger
 	list := &corev1.ServiceList{}
+	selector := labels.NewSelector().Add(ListOptions("service")...)
 	if err := ic.cli.List(
 		ctx,
 		list,
 		client.InNamespace(ic.instanceNamespace),
-		client.MatchingLabels{
-			"app.kubernetes.io/part-of":    "jaeger",
-			"app.kubernetes.io/managed-by": "jaeger-operator",
+		client.MatchingLabelsSelector{
+			Selector: selector,
 		},
 	); err != nil {
 		return nil, err
@@ -179,17 +178,15 @@ func (ic *InventoryComputer) ComputeService(ctx context.Context, desires []*core
 
 func (ic *InventoryComputer) ComputeServiceAccount(ctx context.Context, desire *corev1.ServiceAccount) (*InventoryObject, error) {
 
-	// TODO: Migrate the list options to label.selector
-
 	// Lists the ServiceAccount managed by the current operator and whose instance is the current Jaeger
 	list := &corev1.ServiceAccountList{}
+	selector := labels.NewSelector().Add(ListOptions("service-account")...)
 	if err := ic.cli.List(
 		ctx,
 		list,
 		client.InNamespace(ic.instanceNamespace),
-		client.MatchingLabels{
-			"app.kubernetes.io/part-of":    "jaeger",
-			"app.kubernetes.io/managed-by": "jaeger-operator",
+		client.MatchingLabelsSelector{
+			Selector: selector,
 		},
 	); err != nil {
 
@@ -236,17 +233,15 @@ func (ic *InventoryComputer) ComputeServiceAccount(ctx context.Context, desire *
 
 func (ic *InventoryComputer) ComputeDeployment(ctx context.Context, desires []*appsv1.Deployment) (*InventoryObject, error) {
 
-	// TODO: Migrate the list options to label.selector
-
 	// Lists the Deployment managed by the current operator and whose instance is the current Jaeger
 	list := &appsv1.DeploymentList{}
+	selector := labels.NewSelector().Add(ListOptions("deployment")...)
 	if err := ic.cli.List(
 		ctx,
 		list,
 		client.InNamespace(ic.instanceNamespace),
-		client.MatchingLabels{
-			"app.kubernetes.io/part-of":    "jaeger",
-			"app.kubernetes.io/managed-by": "jaeger-operator",
+		client.MatchingLabelsSelector{
+			Selector: selector,
 		},
 	); err != nil {
 

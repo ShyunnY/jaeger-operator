@@ -95,7 +95,7 @@ func TestAllInOneServiceAccount(t *testing.T) {
 			sa, err := tc.render.ServiceAccount()
 			assert.NoError(t, err)
 
-			if false {
+			if true {
 				outYaml, err := yaml.Marshal(sa)
 				assert.NoError(t, err)
 
