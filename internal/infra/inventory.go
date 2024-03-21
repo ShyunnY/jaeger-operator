@@ -29,7 +29,7 @@ type InventoryObject struct {
 type Deployment struct {
 }
 
-// InventoryComputer TODO: 资源热更新问题:  apply之后, 资源并没有按照预期的更改
+// InventoryComputer Used to calculate the status of the resource and determine whether CreateUpdateDelete is needed based on the result
 type InventoryComputer struct {
 	instanceNamespace string
 	instanceName      string

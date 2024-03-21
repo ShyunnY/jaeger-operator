@@ -59,6 +59,9 @@ func CollectorServices(instance *jaegerv1a1.Jaeger) []*corev1.Service {
 	collectorHeadlessSvc.Labels = labels
 	collectorHeadlessSvc.Annotations = annotations
 
+	if serviceType(instance) != corev1.ServiceTypeClusterIP {
+		collectorHeadlessSvc.Spec.Type = corev1.ServiceTypeClusterIP
+	}
 	// We set the cluster IP too None to provide a headless service
 	collectorHeadlessSvc.Spec.ClusterIP = "None"
 

@@ -2,11 +2,13 @@ package status
 
 import (
 	"context"
-	"github.com/ShyunnY/jaeger-operator/internal/logging"
+
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/ShyunnY/jaeger-operator/internal/logging"
 )
 
 type Update struct {
@@ -47,7 +49,6 @@ func (u *UpdateHandler) apply(upd Update) {
 		newObj := upd.Mutator(obj)
 		newObj.SetUID(obj.GetUID())
 
-		// TODO:
 		err := u.client.Status().Update(context.TODO(), newObj)
 		if err != nil {
 			return err

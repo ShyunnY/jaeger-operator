@@ -125,6 +125,7 @@ func normalizeJaeger(instance *jaegerv1a1.Jaeger) {
 
 }
 
+// hasInWatchNamespace Determine if the resource is under the monitored namespace
 func (r *jaegerReconciler) hasInWatchNamespace(object client.Object) bool {
 	ns := object.GetNamespace()
 	if r.namespaces.Len() != 0 && !r.namespaces.Has(ns) {
@@ -137,9 +138,7 @@ func (r *jaegerReconciler) hasInWatchNamespace(object client.Object) bool {
 func (r *jaegerReconciler) watchResource(mgr manager.Manager, c controller.Controller) error {
 
 	predicates := []predicate.Predicate{
-		GenerationChanger{
-			GenerationChangedPredicate: predicate.GenerationChangedPredicate{},
-		},
+		predicate.GenerationChangedPredicate{},
 	}
 
 	if r.namespaces.Len() != 0 {
@@ -157,8 +156,7 @@ func (r *jaegerReconciler) watchResource(mgr manager.Manager, c controller.Contr
 	return nil
 }
 
-// EnqueueHandler
-// With custom EnqueueHandler, we don't handle delete cases, at least not for now
+// EnqueueHandler With custom enqueueHandler, we don't handle delete cases, at least not for now
 type EnqueueHandler struct {
 	*handler.EnqueueRequestForObject
 }
