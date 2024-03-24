@@ -34,7 +34,7 @@ func TestProcessHTTPRoute(t *testing.T) {
 				},
 				Spec: jaegerv1a1.JaegerSpec{
 					Type: jaegerv1a1.AllInOneType,
-					CommonSpec: jaegerv1a1.CommonSpec{
+					Extensions: jaegerv1a1.ExtensionSetting{
 						HTTPRoute: []jaegerv1a1.HTTPRoute{
 							{
 								Target: jaegerv1a1.QueryServiceTarget,
@@ -72,20 +72,8 @@ func TestProcessHTTPRoute(t *testing.T) {
 				},
 				Spec: jaegerv1a1.JaegerSpec{
 					Type: jaegerv1a1.AllInOneType,
-					CommonSpec: jaegerv1a1.CommonSpec{
+					Extensions: jaegerv1a1.ExtensionSetting{
 						HTTPRoute: []jaegerv1a1.HTTPRoute{
-							{
-								Target: jaegerv1a1.QueryServiceTarget,
-								TargetPort: func() *int {
-									port := 14268
-									return &port
-								}(),
-								ParentRef: &gtwapi.ParentReference{
-									Name:        "eg-gateway",
-									SectionName: &sectionName,
-									Port:        &port,
-								},
-							},
 							{
 								Target: jaegerv1a1.QueryServiceTarget,
 								TargetPort: func() *int {

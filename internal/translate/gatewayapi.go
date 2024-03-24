@@ -15,7 +15,7 @@ func processHTTPRoute(instance *jaegerv1a1.Jaeger, services []*corev1.Service) (
 
 	var httpRoutes []*gtwapi.HTTPRoute
 
-	for _, route := range instance.Spec.CommonSpec.HTTPRoute {
+	for _, route := range instance.Spec.Extensions.HTTPRoute {
 
 		var ref *gtwapi.ParentReference
 		var backendRefs []gtwapi.HTTPBackendRef

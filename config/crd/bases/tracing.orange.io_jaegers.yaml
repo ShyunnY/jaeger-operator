@@ -52,8 +52,8 @@ spec:
             description: JaegerSpec Define the desired state of Jaeger
             properties:
               commonSpec:
-                description: CommonSpec Define Generic configuration of Kubernetes
-                  components
+                description: CommonSpec Define the configuration of components in
+                  Kubernetes
                 properties:
                   deployment:
                     description: Deployment Define configuration of the kubernetes
@@ -63,7 +63,150 @@ spec:
                         description: Replicas Define Deployment replicas number
                         format: int32
                         type: integer
+                      version:
+                        description: Version Define the version of the image used
+                          by the Jaeger instance component
+                        type: string
                     type: object
+                  metadata:
+                    description: Metadata Define metadata configuration of the component
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: Annotations Define annotations setting for metadata
+                          on the resource
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels Define labels setting for metadata on
+                          the resource
+                        type: object
+                    type: object
+                  service:
+                    description: Service Define configuration of the kubernetes Services
+                    properties:
+                      type:
+                        default: ClusterIP
+                        description: Service Type string describes ingress methods
+                          for a service
+                        enum:
+                        - ClusterIP
+                        - NodePort
+                        - LoadBalancer
+                        type: string
+                    type: object
+                type: object
+              components:
+                description: Components Define the subComponents of Jaeger
+                properties:
+                  allInOne:
+                    description: AllInOne Define all-in-one component
+                    properties:
+                      setting:
+                        description: ComponentSettings Define common Settings between
+                          components
+                        properties:
+                          args:
+                            description: Args Defined cmd args for Jaeger components
+                            items:
+                              type: string
+                            type: array
+                          envs:
+                            description: Envs Defined env for Jaeger components
+                            items:
+                              properties:
+                                name:
+                                  description: Define Env name
+                                  minLength: 1
+                                  type: string
+                                value:
+                                  description: Define Env value
+                                  minLength: 1
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
+                    type: object
+                  collector:
+                    description: Collector Define collector component
+                    properties:
+                      setting:
+                        description: ComponentSettings Define common Settings between
+                          components
+                        properties:
+                          args:
+                            description: Args Defined cmd args for Jaeger components
+                            items:
+                              type: string
+                            type: array
+                          envs:
+                            description: Envs Defined env for Jaeger components
+                            items:
+                              properties:
+                                name:
+                                  description: Define Env name
+                                  minLength: 1
+                                  type: string
+                                value:
+                                  description: Define Env value
+                                  minLength: 1
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
+                    type: object
+                  query:
+                    description: QueryComponent Define collector component
+                    properties:
+                      setting:
+                        description: ComponentSettings Define common Settings between
+                          components
+                        properties:
+                          args:
+                            description: Args Defined cmd args for Jaeger components
+                            items:
+                              type: string
+                            type: array
+                          envs:
+                            description: Envs Defined env for Jaeger components
+                            items:
+                              properties:
+                                name:
+                                  description: Define Env name
+                                  minLength: 1
+                                  type: string
+                                value:
+                                  description: Define Env value
+                                  minLength: 1
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
+                    type: object
+                  storage:
+                    description: Storage Define backend storage component
+                    properties:
+                      es:
+                        description: Es Define backend storage is elasticsearch
+                        properties:
+                          url:
+                            type: string
+                        type: object
+                      options:
+                        description: Options Define backend storage options
+                        items:
+                          type: string
+                        type: array
+                      type:
+                        description: Type Define backend storage type
+                        type: string
+                    type: object
+                type: object
+              extensions:
+                description: Extensions Define the configuration of the extension
+                properties:
                   httpRoutes:
                     description: HTTPRoute Define the configuration of GatewayAPI
                       routes
@@ -272,141 +415,6 @@ spec:
                           type: integer
                       type: object
                     type: array
-                  metadata:
-                    description: Metadata Define metadata configuration of the component
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: Annotations Define annotations setting for metadata
-                          on the resource
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: Labels Define labels setting for metadata on
-                          the resource
-                        type: object
-                    type: object
-                  service:
-                    description: Service Define configuration of the kubernetes Services
-                    properties:
-                      type:
-                        default: ClusterIP
-                        description: Service Type string describes ingress methods
-                          for a service
-                        enum:
-                        - ClusterIP
-                        - NodePort
-                        - LoadBalancer
-                        type: string
-                    type: object
-                type: object
-              components:
-                description: Components Define the subComponents of Jaeger
-                properties:
-                  allInOne:
-                    description: AllInOne Define all-in-one component
-                    properties:
-                      setting:
-                        description: ComponentSettings Define common Settings between
-                          components
-                        properties:
-                          args:
-                            description: Args Defined cmd args for Jaeger components
-                            items:
-                              type: string
-                            type: array
-                          envs:
-                            description: Envs Defined env for Jaeger components
-                            items:
-                              properties:
-                                name:
-                                  description: Define Env name
-                                  minLength: 1
-                                  type: string
-                                value:
-                                  description: Define Env value
-                                  minLength: 1
-                                  type: string
-                              type: object
-                            type: array
-                        type: object
-                    type: object
-                  collector:
-                    description: Collector Define collector component
-                    properties:
-                      setting:
-                        description: ComponentSettings Define common Settings between
-                          components
-                        properties:
-                          args:
-                            description: Args Defined cmd args for Jaeger components
-                            items:
-                              type: string
-                            type: array
-                          envs:
-                            description: Envs Defined env for Jaeger components
-                            items:
-                              properties:
-                                name:
-                                  description: Define Env name
-                                  minLength: 1
-                                  type: string
-                                value:
-                                  description: Define Env value
-                                  minLength: 1
-                                  type: string
-                              type: object
-                            type: array
-                        type: object
-                    type: object
-                  query:
-                    description: QueryComponent Define collector component
-                    properties:
-                      setting:
-                        description: ComponentSettings Define common Settings between
-                          components
-                        properties:
-                          args:
-                            description: Args Defined cmd args for Jaeger components
-                            items:
-                              type: string
-                            type: array
-                          envs:
-                            description: Envs Defined env for Jaeger components
-                            items:
-                              properties:
-                                name:
-                                  description: Define Env name
-                                  minLength: 1
-                                  type: string
-                                value:
-                                  description: Define Env value
-                                  minLength: 1
-                                  type: string
-                              type: object
-                            type: array
-                        type: object
-                    type: object
-                  storage:
-                    description: Storage Define backend storage component
-                    properties:
-                      es:
-                        description: Es Define backend storage is elasticsearch
-                        properties:
-                          url:
-                            type: string
-                        type: object
-                      options:
-                        description: Options Define backend storage options
-                        items:
-                          type: string
-                        type: array
-                      type:
-                        description: Type Define backend storage type
-                        type: string
-                    type: object
                 type: object
               type:
                 default: allInOne

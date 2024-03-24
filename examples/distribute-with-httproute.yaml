@@ -8,15 +8,17 @@ spec:
   components:
     storage:
       type: elasticsearch
-  commonSpec:
+  extensions:
     httpRoutes:
       - target: query
         targetPort: 16686
         parentRef:
-          name: eg
+          name: jaeger-gtw
+          sectionName: query
           port: 16686
       - target: collector
         targetPort: 14268
         parentRef:
-          name: eg
+          name: jaeger-gtw
+          sectionName: collector
           port: 14268

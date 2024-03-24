@@ -23,8 +23,8 @@ const (
 )
 
 func (j *Jaeger) EnableHTTPRoute() bool {
-	return j.Spec.CommonSpec.HTTPRoute != nil &&
-		len(j.Spec.CommonSpec.HTTPRoute) != 0
+	return j.Spec.Extensions.HTTPRoute != nil &&
+		len(j.Spec.Extensions.HTTPRoute) != 0
 }
 
 func (j *Jaeger) GetDeploymentType() DeploymentType {

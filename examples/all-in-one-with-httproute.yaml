@@ -5,6 +5,20 @@ metadata:
   namespace: default
 spec:
   type: allInOne
+  extensions:
+    httpRoutes:
+      - target: query
+        targetPort: 16686
+        parentRef:
+          name: jaeger-gtw
+          sectionName: query
+          port: 16686
+      - target: collector
+        targetPort: 14268
+        parentRef:
+          name: jaeger-gtw
+          sectionName: collector
+          port: 14268
   components:
     allInOne:
       setting:
@@ -19,14 +33,3 @@ spec:
         env: dev-env
     service:
       type: ClusterIP
-    httpRoutes:
-      - target: query
-        targetPort: 16686
-        parentRef:
-          name: eg
-          port: 16686
-      - target: collector
-        targetPort: 14268
-        parentRef:
-          name: eg
-          port: 14268

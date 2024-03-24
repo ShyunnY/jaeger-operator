@@ -35,7 +35,6 @@ var (
 
 // JaegerSpec Define the desired state of Jaeger
 type JaegerSpec struct {
-
 	// +kubebuilder:default=allInOne
 	// +optional
 	// Type Define the type of Jaeger deployment
@@ -45,8 +44,13 @@ type JaegerSpec struct {
 	// +optional
 	Components JaegerComponent `json:"components,omitempty"`
 
+	// CommonSpec Define the configuration of components in Kubernetes
 	// +optional
 	CommonSpec CommonSpec `json:"commonSpec,omitempty"`
+
+	// Extensions Define the configuration of the extension
+	// +optional
+	Extensions ExtensionSetting `json:"extensions"`
 }
 
 // JaegerStatus Define the observed state of Jaeger
@@ -82,6 +86,12 @@ type JaegerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Jaeger `json:"items"`
+}
+
+type ExtensionSetting struct {
+	// HTTPRoute Define the configuration of GatewayAPI routes
+	// +optional
+	HTTPRoute []HTTPRoute `json:"httpRoutes,omitempty"`
 }
 
 // JaegerComponent Defining individual components
@@ -150,21 +160,20 @@ type CommonSpec struct {
 	// Deployment Define configuration of the kubernetes Deployments
 	// +optional
 	Deployment DeploymentSettings `json:"deployment"`
-
-	// HTTPRoute Define the configuration of GatewayAPI routes
-	// +optional
-	HTTPRoute []HTTPRoute `json:"httpRoutes,omitempty"`
 }
 
 type DeploymentSettings struct {
 	// Replicas Define Deployment replicas number
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
+
+	// Version Define the version of the image used by the Jaeger instance component
+	// +optional
+	Version string `json:"version,omitempty"`
 }
 
 // HTTPRoute Define the HTTPRoute configuration for the Gateway API
 type HTTPRoute struct {
-
 	// +kubebuilder:validation:Required
 	// Target Define the Service target to which routes need to be added
 	Target JaegerServiceTarget `json:"target,omitempty"`
@@ -173,9 +182,9 @@ type HTTPRoute struct {
 	// TargetPort Define the Service target port to which routes need to be added
 	TargetPort *int `json:"targetPort,omitempty"`
 
-	// +optional
 	// Hostnames Define a set of hostnames that should match against the HTTP Host
 	// header to select a HTTPRoute used to process the request.
+	// +optional
 	Hostnames []gtwapi.Hostname `json:"hostnames,omitempty"`
 
 	// +kubebuilder:validation:Required
