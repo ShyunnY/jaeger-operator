@@ -1,6 +1,7 @@
 package translate
 
 import (
+	"fmt"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +20,7 @@ func allInOneDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 	container := &corev1.Container{
 		// TODO: add more settings?
 		Name:  consts.AllIneOneComponent,
-		Image: "jaegertracing/all-in-one:1.55.0",
+		Image: fmt.Sprintf("jaegertracing/all-in-one:%s", instance.GetCommonSpec().Deployment.Version),
 		Args:  instance.Spec.Components.AllInOne.Args,
 		Env:   utils.ConvertEnvVar(instance.Spec.Components.AllInOne.Envs),
 		Ports: ports,
@@ -45,7 +46,7 @@ func QueryDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 			},
 			{
 				Name:  "JAEGER_PROPAGATION",
-				Value: "JAEGER_PROPAGATION",
+				Value: "true",
 			},
 		},
 		instance.Spec.Components.Query.Envs...,
@@ -54,7 +55,7 @@ func QueryDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 	container := &corev1.Container{
 		// TODO: add more settings?
 		Name:  consts.QueryComponent,
-		Image: "jaegertracing/jaeger-query:1.55.0",
+		Image: fmt.Sprintf("jaegertracing/jaeger-query:%s", instance.GetCommonSpec().Deployment.Version),
 		Args:  instance.Spec.Components.Query.Args,
 		Env:   utils.ConvertEnvVar(envs),
 		Ports: ports,
@@ -73,7 +74,7 @@ func CollectorDeploy(instance *jaegerv1a1.Jaeger) *appsv1.Deployment {
 	container := &corev1.Container{
 		// TODO: add more settings?
 		Name:  consts.CollectorComponent,
-		Image: "jaegertracing/jaeger-collector:1.55.0",
+		Image: fmt.Sprintf("jaegertracing/jaeger-collector:%s", instance.GetCommonSpec().Deployment.Version),
 		Args:  instance.Spec.Components.Collector.Args,
 		Env:   utils.ConvertEnvVar(instance.Spec.Components.Collector.Envs),
 		Ports: ports,

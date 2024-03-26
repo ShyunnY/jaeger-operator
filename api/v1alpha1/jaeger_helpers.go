@@ -22,6 +22,16 @@ const (
 	ServiceTargetLabelKey = "tracing.orange.io/service-target"
 )
 
+var ImageVersion = "1.55.0"
+
+func (j *Jaeger) GetCommonSpec() CommonSpec {
+	return j.Spec.CommonSpec
+}
+
+func (j *Jaeger) GetJaegerComponent() JaegerComponent {
+	return j.Spec.Components
+}
+
 func (j *Jaeger) EnableHTTPRoute() bool {
 	return j.Spec.Extensions.HTTPRoute != nil &&
 		len(j.Spec.Extensions.HTTPRoute) != 0

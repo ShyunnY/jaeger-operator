@@ -123,6 +123,9 @@ func normalizeJaeger(instance *jaegerv1a1.Jaeger) {
 		instance.Name = "simple-jaeger"
 	}
 
+	if len(instance.GetCommonSpec().Deployment.Version) == 0 {
+		instance.Spec.CommonSpec.Deployment.Version = jaegerv1a1.ImageVersion
+	}
 }
 
 // hasInWatchNamespace Determine if the resource is under the monitored namespace

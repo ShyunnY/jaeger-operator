@@ -168,6 +168,7 @@ type DeploymentSettings struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 
 	// Version Define the version of the image used by the Jaeger instance component
+	// +kubebuilder:validation:Pattern=^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$
 	// +optional
 	Version string `json:"version,omitempty"`
 }
