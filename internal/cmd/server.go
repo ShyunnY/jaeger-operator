@@ -9,6 +9,7 @@ import (
 	kubernetesrunner "github.com/ShyunnY/jaeger-operator/internal/kubernetes/runner"
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
 	"github.com/ShyunnY/jaeger-operator/internal/message"
+	"github.com/ShyunnY/jaeger-operator/internal/metrics"
 	statusrunner "github.com/ShyunnY/jaeger-operator/internal/status/runner"
 	translaterunner "github.com/ShyunnY/jaeger-operator/internal/translate/runner"
 	"github.com/ShyunnY/jaeger-operator/internal/utils"
@@ -56,7 +57,10 @@ func server() error {
 
 	// TODO: tracing server
 
-	// TODO: metrics serve
+	// metrics serve
+	if err := metrics.New(cfg); err != nil {
+		return err
+	}
 
 	// starting runners
 	if err := setRunners(cfg); err != nil {

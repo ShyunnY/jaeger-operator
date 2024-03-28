@@ -16,8 +16,19 @@ const (
 	AllIneOneComponent = "allinone"
 )
 
+// jaeger service type
 const (
 	QueryServiceType             = "query-svc"
 	CollectorServiceType         = "collector-svc"
 	CollectorServiceHeadlessType = "collector-headless-svc"
+)
+
+// jaeger metrics
+const (
+	MetricsHost = "0.0.0.0"
+	MetricsPort = "10424"
+
+	OtelHost   = "localhost"
+	OtelPort   = "4317"
+	OtelProtol = "4317"
 )
