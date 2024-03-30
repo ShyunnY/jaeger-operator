@@ -1,9 +1,11 @@
 package metrics
 
-import "go.opentelemetry.io/otel"
+import (
+	"go.opentelemetry.io/otel"
+)
 
 var (
-	meterProvider = otel.GetMeterProvider()
+	meterProvider = otel.GetMeterProvider().Meter("jaeger-operator")
 )
 
 // TODO: 包装meter的三种类型, 以及添加对应的元数据Metadata
