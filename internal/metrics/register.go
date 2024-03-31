@@ -26,6 +26,7 @@ var (
 	metricsEndpoint = "/metrics"
 )
 
+// TODO: 需要将controller-runtime中的metrics端点改变到此server上
 func init() {
 	otel.SetLogger(metricLogger.Logger)
 }
@@ -55,12 +56,10 @@ func (o *Options) enableSink() bool {
 	return false
 }
 
+// New Create the metrics service and create the corresponding metrics Exporter.
+// By default, only the Prometheus Exporter is enabled (of course, this can be explicitly disabled).
+// If you have a Sink configured, you can export metrics to Collectors that support the OTLP protocol.
 func New(cfg *config.Server) error {
-
-	if cfg.Metric == nil {
-		metricLogger.Info("metric service is not currently enabled")
-		return nil
-	}
 
 	opts := applyConfig(cfg)
 	if err := registerProvider(opts); err != nil {

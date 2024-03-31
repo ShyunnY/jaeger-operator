@@ -49,6 +49,9 @@ func server() error {
 		JaegerOperatorName: "jaeger-operator",
 		Logger:             logging.NewLogger(consts.LogLevel(logLevel)).WithName(Name()),
 		NamespaceSet:       utils.ExtractNamespace(namespace),
+		Observability: config.Observability{
+			Metric: &config.Metrics{},
+		},
 	}
 
 	// running admin serve

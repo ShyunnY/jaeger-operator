@@ -43,7 +43,7 @@ func (m *Manager) BuildInfraResources(ctx context.Context, infraIR *message.Infr
 	condJaeger.Status.Phase = "Failed"
 	condJaeger.ObjectMeta = infraIR.InstanceMedata
 
-	// create service account
+	// service account is the first one we have to make sure to create, and if it fails, we'll skip it
 	if saObj, err := ic.ComputeServiceAccount(ctx, infraIR.ServiceAccount); err != nil {
 		m.logger.Error(err, "failed to compute ServiceAccount")
 
@@ -53,8 +53,9 @@ func (m *Manager) BuildInfraResources(ctx context.Context, infraIR *message.Infr
 			return saObj
 		}); err != nil {
 			m.logger.Error(err, "failed to create or update ServiceAccount")
-
 			status.SetJaegerCondition(condJaeger, "Error", metav1.ConditionFalse, "Infra", "failed to create or update ServiceAccount")
+
+			return err
 		}
 	}
 
@@ -68,7 +69,6 @@ func (m *Manager) BuildInfraResources(ctx context.Context, infraIR *message.Infr
 			return deployObj
 		}); err != nil {
 			m.logger.Error(err, "failed to create or update Deployment")
-
 			status.SetJaegerCondition(condJaeger, "Error", metav1.ConditionFalse, "Infra", "failed to create or update Deployment")
 		}
 	}
@@ -83,7 +83,6 @@ func (m *Manager) BuildInfraResources(ctx context.Context, infraIR *message.Infr
 			return servicesObj
 		}); err != nil {
 			m.logger.Error(err, "failed to create or update Service")
-
 			status.SetJaegerCondition(condJaeger, "Error", metav1.ConditionFalse, "Infra", "failed to create or update Services")
 		}
 	}
@@ -98,7 +97,6 @@ func (m *Manager) BuildInfraResources(ctx context.Context, infraIR *message.Infr
 			return httpRoutesObj
 		}); err != nil {
 			m.logger.Error(err, "failed to create or update HTTPRoutes")
-
 			status.SetJaegerCondition(condJaeger, "Error", metav1.ConditionFalse, "Infra", "failed to create or update HTTPRoutes")
 		}
 	}

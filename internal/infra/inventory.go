@@ -176,6 +176,7 @@ func (ic *InventoryComputer) ComputeService(ctx context.Context, desires []*core
 	}, nil
 }
 
+// ComputeServiceAccount Calculate Service Account resources
 func (ic *InventoryComputer) ComputeServiceAccount(ctx context.Context, desire *corev1.ServiceAccount) (*InventoryObject, error) {
 
 	// Lists the ServiceAccount managed by the current operator and whose instance is the current Jaeger
