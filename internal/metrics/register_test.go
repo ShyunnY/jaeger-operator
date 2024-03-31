@@ -1,16 +1,22 @@
 package metrics
 
 import (
-	"context"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel/attribute"
+	"k8s.io/apimachinery/pkg/util/rand"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/ShyunnY/jaeger-operator/internal/config"
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
-	"github.com/stretchr/testify/assert"
 )
+
+func TestNoopMetrics(t *testing.T) {
+	err := New(&config.Server{})
+	assert.NoError(t, err)
+}
 
 func TestNewPrometheus(t *testing.T) {
 
@@ -19,21 +25,18 @@ func TestNewPrometheus(t *testing.T) {
 	err := New(&config.Server{
 		Logger: logging.NewLogger("debug"),
 		Observability: config.Observability{
-			Metric: &config.Metrics{
-				Protocol: "xxx-ooo",
-			},
+			Metric: &config.Metrics{},
 		},
 	})
 	assert.NoError(t, err)
 
-	counter, err := meterProvider.Meter("envoy-gateway").Float64Counter("request_total")
-	if err != nil {
-		panic(err)
-	}
+	counter := NewCounter("request_total", "handler request count", WithAttribute(attribute.String("backend", "login")))
+	gauge := NewGauge("message_use_rate", "use rate in message handler of disk", WithAttribute(attribute.String("message", "disk")))
 
 	go func() {
 		for {
-			counter.Add(context.Background(), 1)
+			counter.Increment()
+			gauge.Record(float64(rand.Int()))
 			time.Sleep(time.Second)
 		}
 	}()

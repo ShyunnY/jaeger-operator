@@ -7,6 +7,8 @@ import (
 	otelmetrics "go.opentelemetry.io/otel/metric"
 )
 
+const CounterMetricType = "counter"
+
 type Counter struct {
 	name    string
 	attr    []attribute.KeyValue
@@ -15,24 +17,20 @@ type Counter struct {
 
 func NewCounter(name, description string, opts ...MetricOptions) *Counter {
 	option := applyOption(opts...)
-
 	c, err := meterProvider.Float64Counter(
 		name,
 		otelmetrics.WithDescription(description),
 		otelmetrics.WithUnit(option.Unit),
 	)
 	if err != nil {
-		// TODO: need handler err
-		panic(err)
+		metricLogger.Error(err, "failed to create new metric", "type", CounterMetricType, "name", name)
 	}
 
-	counter := &Counter{
+	return &Counter{
 		name:    name,
 		attr:    option.Attr,
 		counter: c,
 	}
-
-	return counter
 }
 
 func (c *Counter) Add(val float64) {

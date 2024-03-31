@@ -5,6 +5,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/ShyunnY/jaeger-operator/internal/config"
+	"github.com/ShyunnY/jaeger-operator/internal/consts"
 	infrarunner "github.com/ShyunnY/jaeger-operator/internal/infra/runner"
 	kubernetesrunner "github.com/ShyunnY/jaeger-operator/internal/kubernetes/runner"
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
@@ -46,7 +47,7 @@ func server() error {
 
 	cfg := &config.Server{
 		JaegerOperatorName: "jaeger-operator",
-		Logger:             logging.NewLogger(logLevel).WithName(Name()),
+		Logger:             logging.NewLogger(consts.LogLevel(logLevel)).WithName(Name()),
 		NamespaceSet:       utils.ExtractNamespace(namespace),
 	}
 

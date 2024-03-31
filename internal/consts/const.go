@@ -29,6 +29,23 @@ const (
 	MetricsPort = "10424"
 
 	OtelHost   = "localhost"
-	OtelPort   = "4317"
-	OtelProtol = "4317"
+	OtelPort   = "4318"
+	OtelProtol = "http"
+)
+
+type LogLevel string
+
+const (
+
+	// LogLevelDebug define debug level logging
+	LogLevelDebug LogLevel = "debug"
+
+	// LogLevelDInfo define info level logging
+	LogLevelDInfo LogLevel = "info"
+
+	// LogLevelWarn define warn level logging
+	LogLevelWarn LogLevel = "warn"
+
+	// LogLevelError define error level logging
+	LogLevelError LogLevel = "error"
 )

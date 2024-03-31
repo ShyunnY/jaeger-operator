@@ -17,12 +17,18 @@ func WithUnit(unit string) MetricOptions {
 
 func WithAttribute(attr ...attribute.KeyValue) MetricOptions {
 	return func(o *MetricOption) {
-		o.Attr = attr
+		if o.Attr != nil && len(o.Attr) > 0 {
+			o.Attr = append(o.Attr, attr...)
+		} else {
+			o.Attr = attr
+		}
 	}
 }
 
 func applyOption(opts ...MetricOptions) *MetricOption {
-	metricOpt := &MetricOption{}
+	metricOpt := &MetricOption{
+		Attr: []attribute.KeyValue{},
+	}
 	for _, opt := range opts {
 		opt(metricOpt)
 	}

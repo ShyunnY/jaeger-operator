@@ -25,11 +25,15 @@ type Observability struct {
 }
 
 type Metrics struct {
+	Sink *OpenTelemetrySink
+
+	DisablePrometheus *bool
+}
+
+type OpenTelemetrySink struct {
 	Host     string
 	Port     string
 	Protocol string
-
-	DisablePrometheus *bool
 }
 
 type Traces struct {

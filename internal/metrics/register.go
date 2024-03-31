@@ -21,12 +21,16 @@ import (
 )
 
 var (
+	meterProvider   = otel.GetMeterProvider().Meter("jaeger-operator")
+	metricLogger    = logging.NewLogger(consts.LogLevelDInfo).WithName("metrics")
 	metricsEndpoint = "/metrics"
-	metricsLogger   = "metrics"
 )
 
+func init() {
+	otel.SetLogger(metricLogger.Logger)
+}
+
 type Options struct {
-	logger  logging.Logger
 	address string
 
 	sink struct {
@@ -42,13 +46,28 @@ type Options struct {
 	}
 }
 
+func (o *Options) enableSink() bool {
+	if len(o.sink.host) != 0 &&
+		len(o.sink.port) != 0 {
+		return true
+	}
+
+	return false
+}
+
 func New(cfg *config.Server) error {
+
+	if cfg.Metric == nil {
+		metricLogger.Info("metric service is not currently enabled")
+		return nil
+	}
 
 	opts := applyConfig(cfg)
 	if err := registerProvider(opts); err != nil {
 		return err
 	}
 
+	// if Prometheus is not disabled, we start a web server to provide to prom for pull
 	if !cfg.DisablePrometheus() {
 		return promServer(opts)
 	}
@@ -57,28 +76,31 @@ func New(cfg *config.Server) error {
 }
 
 func applyConfig(cfg *config.Server) *Options {
-	opts := &Options{
-		logger:  cfg.Logger.WithName(metricsLogger),
-		address: net.JoinHostPort(consts.MetricsHost, consts.MetricsPort),
+	opts := &Options{}
+
+	// we only configure the Sink if it is configured.
+	// otherwise we will not register the otel exporter
+	if cfg.Metric.Sink != nil {
+		opts.sink.host = consts.OtelHost
+		opts.sink.port = consts.OtelPort
+		opts.sink.protocol = consts.OtelProtol
+
+		if cfg.Metric != nil && len(cfg.Metric.Sink.Host) != 0 {
+			opts.sink.host = cfg.Metric.Sink.Host
+		}
+
+		if cfg.Metric != nil && len(cfg.Metric.Sink.Port) != 0 {
+			opts.sink.port = cfg.Metric.Sink.Port
+		}
+
+		if cfg.Metric != nil && len(cfg.Metric.Sink.Protocol) != 0 {
+			opts.sink.protocol = cfg.Metric.Sink.Protocol
+		}
 	}
 
-	opts.sink.host = consts.OtelHost
-	opts.sink.port = consts.OtelPort
-	opts.sink.protocol = consts.OtelProtol
-
-	if cfg.Metric != nil && len(cfg.Metric.Host) != 0 {
-		opts.sink.host = cfg.Metric.Host
-	}
-
-	if cfg.Metric != nil && len(cfg.Metric.Port) != 0 {
-		opts.sink.port = cfg.Metric.Port
-	}
-
-	if cfg.Metric != nil && len(cfg.Metric.Protocol) != 0 {
-		opts.sink.protocol = cfg.Metric.Protocol
-	}
-
+	// if Prometheus is not disabled, we build the values required for prom
 	if !cfg.DisablePrometheus() {
+		opts.address = net.JoinHostPort(consts.MetricsHost, consts.MetricsPort)
 		opts.prometheus.enableProm = true
 		opts.prometheus.registry = ctrlmetrics.Registry
 		opts.prometheus.gatherer = ctrlmetrics.Registry
@@ -90,14 +112,16 @@ func applyConfig(cfg *config.Server) *Options {
 func registerProvider(opts *Options) error {
 
 	metricOpts := []metric.Option{}
-	switch opts.sink.protocol {
-	case "http", "https":
-		if err := registerOTELHTTPExporter(opts, &metricOpts); err != nil {
-			return err
-		}
-	case "grpc":
-		if err := registerOTELGRPCExporter(opts, &metricOpts); err != nil {
-			return err
+	if opts.enableSink() {
+		switch opts.sink.protocol {
+		case "http", "https":
+			if err := registerOTELHTTPExporter(opts, &metricOpts); err != nil {
+				return err
+			}
+		case "grpc":
+			if err := registerOTELGRPCExporter(opts, &metricOpts); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -106,7 +130,6 @@ func registerProvider(opts *Options) error {
 			return err
 		}
 	}
-
 	meterProvider := metric.NewMeterProvider(metricOpts...)
 	otel.SetMeterProvider(meterProvider)
 
@@ -116,7 +139,7 @@ func registerProvider(opts *Options) error {
 // promServer Run the prometheus service
 func promServer(opts *Options) error {
 
-	opts.logger.Info("start prom metrics server", "address", opts.address)
+	metricLogger.Info("start prom metrics server", "address", opts.address)
 
 	handler := promhttp.HandlerFor(
 		opts.prometheus.gatherer,
@@ -137,7 +160,7 @@ func promServer(opts *Options) error {
 
 	go func() {
 		if err := sre.ListenAndServe(); err != nil {
-			opts.logger.Error(err, "failed to start the prom metrics server")
+			metricLogger.Error(err, "failed to start the prom metrics server")
 		}
 	}()
 
@@ -158,7 +181,7 @@ func registerPrometheus(opts *Options, metricOpts *[]metric.Option) error {
 	}
 
 	*metricOpts = append(*metricOpts, metric.WithReader(promExporter))
-	opts.logger.Info("build the otel metrics pull endpoint", "address", opts.address)
+	metricLogger.Info("build the otel metrics pull endpoint", "address", opts.address)
 
 	return nil
 }
@@ -178,7 +201,7 @@ func registerOTELHTTPExporter(opts *Options, metricOpts *[]metric.Option) error 
 
 	reader := metric.NewPeriodicReader(httpExporter)
 	*metricOpts = append(*metricOpts, metric.WithReader(reader))
-	opts.logger.Info("build the otel metrics http push endpoint", "address", address)
+	metricLogger.Info("build the otel metrics http push endpoint", "address", address)
 
 	return nil
 }
@@ -198,7 +221,7 @@ func registerOTELGRPCExporter(opts *Options, metricOpts *[]metric.Option) error 
 
 	reader := metric.NewPeriodicReader(gRPCExporter)
 	*metricOpts = append(*metricOpts, metric.WithReader(reader))
-	opts.logger.Info("build the otel metrics gRPC push endpoint", "address", address)
+	metricLogger.Info("build the otel metrics gRPC push endpoint", "address", address)
 
 	return nil
 }

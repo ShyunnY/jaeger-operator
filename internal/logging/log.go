@@ -8,15 +8,17 @@ import (
 	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/ShyunnY/jaeger-operator/internal/consts"
 )
 
 type Logger struct {
-	level string
+	level consts.LogLevel
 	logr.Logger
 }
 
 // NewLogger 构建一个内部使用zap的logger
-func NewLogger(level string) Logger {
+func NewLogger(level consts.LogLevel) Logger {
 
 	logger := zapr.NewLogger(zap.New(initZapCore(level), zap.AddCaller()))
 	return Logger{
@@ -26,12 +28,12 @@ func NewLogger(level string) Logger {
 }
 
 func DefaultLogger() Logger {
-	return NewLogger("info")
+	return NewLogger(consts.LogLevelDebug)
 }
 
-func initZapCore(level string) zapcore.Core {
+func initZapCore(level consts.LogLevel) zapcore.Core {
 
-	Level, err := zapcore.ParseLevel(level)
+	Level, err := zapcore.ParseLevel(string(level))
 	if err != nil {
 		Level = zap.InfoLevel
 	}
