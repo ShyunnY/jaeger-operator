@@ -25,3 +25,4 @@ help: ## Display this help.
 include make/tool.mk
 include make/golang.mk
 include make/kubernetes.mk
+include make/doc.mk
