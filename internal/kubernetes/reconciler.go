@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 
+	"go.opentelemetry.io/otel"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/utils/set"
@@ -17,6 +18,7 @@ import (
 
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 	"github.com/ShyunnY/jaeger-operator/internal/config"
+	"github.com/ShyunnY/jaeger-operator/internal/consts"
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
 	"github.com/ShyunnY/jaeger-operator/internal/message"
 )
@@ -63,6 +65,10 @@ func NewJaegerController(cfg config.Server, mgr manager.Manager, jaegerIR *messa
 func (r *jaegerReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	r.logger.Info("reconcile jaeger object", "instance", req.Name)
 
+	tracer := otel.GetTracerProvider().Tracer(consts.ReconciliationTracer)
+	ctx, span := tracer.Start(ctx, "reconcile")
+	defer span.End()
+
 	instance := jaegerv1a1.Jaeger{}
 	if err := r.client.Get(ctx, req.NamespacedName, &instance); err != nil {
 		if kerrors.IsNotFound(err) {
@@ -98,7 +104,11 @@ func (r *jaegerReconciler) Reconcile(ctx context.Context, req reconcile.Request)
 	normalizeJaeger(&instance)
 
 	// Let translate calculate the K8s resources required by Jaeger.
-	r.irMessage.Store(req.String(), &instance)
+	jc := &message.JaegerWithCtx{
+		Jaeger: &instance,
+		Ctx:    ctx,
+	}
+	r.irMessage.Store(req.String(), jc)
 
 	return reconcile.Result{}, nil
 }

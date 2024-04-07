@@ -1,6 +1,8 @@
 package message
 
 import (
+	"context"
+
 	"github.com/telepresenceio/watchable"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -12,7 +14,7 @@ import (
 )
 
 type IRMessage struct {
-	watchable.Map[string, *jaegerv1a1.Jaeger]
+	watchable.Map[string, *JaegerWithCtx]
 }
 
 type InfraIRMaps struct {
@@ -21,6 +23,7 @@ type InfraIRMaps struct {
 }
 
 type InfraIR struct {
+	Ctx            context.Context
 	Strategy       string
 	InstanceMedata metav1.ObjectMeta
 

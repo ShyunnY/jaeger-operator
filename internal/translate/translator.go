@@ -2,6 +2,7 @@ package translate
 
 import (
 	"fmt"
+
 	"k8s.io/apimachinery/pkg/types"
 
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
@@ -22,7 +23,7 @@ type Translator struct {
 // Translate
 // Jaeger resources are translated into kubernetes resources according to strategy,
 // which are passed to infrastructure as infraIR for construction
-func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
+func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) (*message.InfraIR, error) {
 
 	infraIR := new(message.InfraIR)
 	instance.Status.Phase = "Failed"
@@ -50,7 +51,7 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 		t.Logger.Info("unsupported deployment strategy")
 
 		status.SetJaegerCondition(instance, "Error", metav1.ConditionFalse, "Translate", "unsupported deployment strategy")
-		return fmt.Errorf("current deployment type is not supported: %s", infraIR.Strategy)
+		return nil, fmt.Errorf("current deployment type is not supported: %s", infraIR.Strategy)
 	}
 
 	// render strategy resources
@@ -114,7 +115,5 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) error {
 		instance.Status.Phase = "Success"
 	}
 
-	// push ir
-	t.InfraIRMap.Store(instance.Name, infraIR)
-	return nil
+	return infraIR, nil
 }

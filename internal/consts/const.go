@@ -49,3 +49,12 @@ const (
 	// LogLevelError define error level logging
 	LogLevelError LogLevel = "error"
 )
+
+const (
+	ReconciliationTracer string = "operator/reconciliation"
+)
+
+const (
+	OperatorName        = "jaeger-operator"
+	DefaultAllNamespace = "all_namespace"
+)

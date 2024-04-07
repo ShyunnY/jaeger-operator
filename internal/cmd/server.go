@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/ShyunnY/jaeger-operator/internal/tracing"
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -46,7 +47,7 @@ func GetServerCommand() *cobra.Command {
 func server() error {
 
 	cfg := &config.Server{
-		JaegerOperatorName: "jaeger-operator",
+		JaegerOperatorName: consts.OperatorName,
 		Logger:             logging.NewLogger(consts.LogLevel(logLevel)).WithName(Name()),
 		NamespaceSet:       utils.ExtractNamespace(namespace),
 		Observability: config.Observability{
@@ -59,7 +60,10 @@ func server() error {
 		return err
 	}
 
-	// TODO: tracing server
+	// tracing serve
+	if err := tracing.New(cfg); err != nil {
+		return err
+	}
 
 	// metrics serve
 	if err := metrics.New(cfg); err != nil {

@@ -1,6 +1,8 @@
 package tracing
 
 import (
+	"github.com/ShyunnY/jaeger-operator/internal/config"
+	"github.com/ShyunnY/jaeger-operator/internal/consts"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
@@ -10,17 +12,31 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 )
 
-// BuildTracer Building a Global tracer
-func BuildTracer(instance string, namespace string) error {
+// New TODO: 需要完善trace, 并且添加日志记录等
+func New(cfg *config.Server) error {
 
-	export, err := buildJaegerTraceExport("endpoint")
+	if !enableTraceObservability(cfg) {
+		return nil
+	}
+
+	return BuildTracer(
+		cfg.JaegerOperatorName,
+		consts.DefaultAllNamespace,
+		*cfg.Observability.Trace.Endpoint,
+	)
+}
+
+// BuildTracer Building a Global tracer
+func BuildTracer(instance, namespace, endpoint string) error {
+
+	export, err := buildJaegerTraceExport(endpoint)
 	if err != nil {
 		return err
 	}
 
 	attr := []attribute.KeyValue{
 		semconv.ServiceNameKey.String("jaeger-operator"),
-		semconv.ServiceVersionKey.String("version.Get().Operator"),
+		semconv.ServiceVersionKey.String("0.1.0"),
 		semconv.ServiceNamespaceKey.String(namespace),
 	}
 	if len(instance) != 0 {
@@ -52,4 +68,13 @@ func buildJaegerTraceExport(endpoint string) (sdkTrace.SpanExporter, error) {
 	}
 
 	return jaegerExport, nil
+}
+
+func enableTraceObservability(cfg *config.Server) bool {
+	if cfg.Observability.Trace != nil &&
+		cfg.Observability.Trace.Endpoint != nil &&
+		len(*cfg.Observability.Trace.Endpoint) != 0 {
+		return true
+	}
+	return false
 }

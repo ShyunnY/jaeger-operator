@@ -37,10 +37,11 @@ type OpenTelemetrySink struct {
 }
 
 type Traces struct {
+	Endpoint *string
 }
 
 func (s *Server) DisablePrometheus() bool {
-	if s.Metric != nil &&
+	if s.Observability.Metric != nil &&
 		s.Metric.DisablePrometheus != nil &&
 		*s.Metric.DisablePrometheus == true {
 		return true
