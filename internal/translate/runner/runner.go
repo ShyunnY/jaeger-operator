@@ -51,6 +51,7 @@ func (r *Runner) translateResources(ctx context.Context) {
 		r.IrMessage.Subscribe(ctx),
 		func(update watchable.Update[string, *message.JaegerWithCtx], errCh chan error) {
 			r.Logger.Info("translator takes the ir instance and handler it", "instance", update.Key)
+
 			tracer := otel.GetTracerProvider().Tracer(consts.ReconciliationTracer)
 			ctx, span := tracer.Start(update.Value.Ctx, "translate")
 			defer span.End()

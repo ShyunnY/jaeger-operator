@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/ShyunnY/jaeger-operator/internal/tracing"
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/ShyunnY/jaeger-operator/internal/message"
 	"github.com/ShyunnY/jaeger-operator/internal/metrics"
 	statusrunner "github.com/ShyunnY/jaeger-operator/internal/status/runner"
+	"github.com/ShyunnY/jaeger-operator/internal/tracing"
 	translaterunner "github.com/ShyunnY/jaeger-operator/internal/translate/runner"
 	"github.com/ShyunnY/jaeger-operator/internal/utils"
 )
@@ -22,8 +22,9 @@ const (
 )
 
 var (
-	logLevel  string
-	namespace string
+	logLevel          string
+	namespace         string
+	testTraceEndpoint string
 )
 
 func GetServerCommand() *cobra.Command {
@@ -38,7 +39,8 @@ func GetServerCommand() *cobra.Command {
 	}
 
 	sreCmd.Flags().StringVarP(&logLevel, "log-level", "v", "info", "config log output level")
-	sreCmd.Flags().StringVarP(&namespace, "namespaces", "n", "", "config watch namespace, use ',' to separate multiple namespaces, empty means watch all (e.g. prod,dev)")
+	sreCmd.Flags().StringVarP(&namespace, "namespaces", "n", "", "config watch namespace, use ',' to separate multiple namespaces, empty means watch all (e.g. prod, dev)")
+	sreCmd.Flags().StringVarP(&testTraceEndpoint, "endpoint", "e", "", "test trace endpoint")
 
 	return sreCmd
 }
@@ -52,6 +54,9 @@ func server() error {
 		NamespaceSet:       utils.ExtractNamespace(namespace),
 		Observability: config.Observability{
 			Metric: &config.Metrics{},
+			Trace: &config.Traces{
+				Endpoint: &testTraceEndpoint,
+			},
 		},
 	}
 

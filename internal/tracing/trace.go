@@ -1,15 +1,20 @@
 package tracing
 
 import (
-	"github.com/ShyunnY/jaeger-operator/internal/config"
-	"github.com/ShyunnY/jaeger-operator/internal/consts"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
-
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+
+	"github.com/ShyunnY/jaeger-operator/internal/config"
+	"github.com/ShyunnY/jaeger-operator/internal/consts"
+	"github.com/ShyunnY/jaeger-operator/internal/logging"
+)
+
+var (
+	tracingLog = logging.NewLogger(consts.LogLevelDInfo).WithName("tracing")
 )
 
 // New TODO: 需要完善trace, 并且添加日志记录等
@@ -19,11 +24,18 @@ func New(cfg *config.Server) error {
 		return nil
 	}
 
-	return BuildTracer(
+	if err := BuildTracer(
 		cfg.JaegerOperatorName,
 		consts.DefaultAllNamespace,
 		*cfg.Observability.Trace.Endpoint,
-	)
+	); err != nil {
+		tracingLog.Error(err, "failed to build trace provider")
+
+		return err
+	}
+
+	tracingLog.Info("success to build trace provider")
+	return nil
 }
 
 // BuildTracer Building a Global tracer

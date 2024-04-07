@@ -11,7 +11,23 @@ type JaegerWithCtx struct {
 	Ctx context.Context
 }
 
+func (j JaegerWithCtx) DeepCopy() *JaegerWithCtx {
+	out := new(JaegerWithCtx)
+	out.Jaeger = j.Jaeger.DeepCopy()
+	out.Ctx = j.Ctx
+
+	return out
+}
+
 type JaegerStatusWithCtx struct {
 	*jaegerv1a1.JaegerStatus
 	ctx context.Context
+}
+
+func (j *JaegerStatusWithCtx) DeepCopy() *JaegerStatusWithCtx {
+	out := new(JaegerStatusWithCtx)
+	out.JaegerStatus = j.JaegerStatus.DeepCopy()
+	out.ctx = j.ctx
+
+	return out
 }

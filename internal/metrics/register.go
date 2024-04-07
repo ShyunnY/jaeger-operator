@@ -71,6 +71,7 @@ func New(cfg *config.Server) error {
 		return promServer(opts)
 	}
 
+	metricLogger.Info("success to build metrics provider")
 	return nil
 }
 

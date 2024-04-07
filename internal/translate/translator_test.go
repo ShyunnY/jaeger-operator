@@ -1,8 +1,9 @@
 package translate
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 	"github.com/ShyunnY/jaeger-operator/internal/message"
@@ -29,8 +30,10 @@ func TestTranslateNormal(t *testing.T) {
 		},
 	}
 
-	err := translator.Translate(instance)
+	infra, err := translator.Translate(instance)
 	assert.NoError(t, err)
+
+	translator.InfraIRMap.Store(instance.Name, infra)
 
 	value, exist := irMaps.Load(instance.Name)
 	assert.True(t, exist)
