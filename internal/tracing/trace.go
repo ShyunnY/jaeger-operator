@@ -3,10 +3,12 @@ package tracing
 import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ShyunnY/jaeger-operator/internal/config"
 	"github.com/ShyunnY/jaeger-operator/internal/consts"
@@ -17,7 +19,7 @@ var (
 	tracingLog = logging.NewLogger(consts.LogLevelDInfo).WithName("tracing")
 )
 
-// New TODO: 需要完善trace, 并且添加日志记录等
+// New Create a new trace
 func New(cfg *config.Server) error {
 
 	if !enableTraceObservability(cfg) {
@@ -30,7 +32,6 @@ func New(cfg *config.Server) error {
 		*cfg.Observability.Trace.Endpoint,
 	); err != nil {
 		tracingLog.Error(err, "failed to build trace provider")
-
 		return err
 	}
 
@@ -80,6 +81,14 @@ func buildJaegerTraceExport(endpoint string) (sdkTrace.SpanExporter, error) {
 	}
 
 	return jaegerExport, nil
+}
+
+// HandleErr If err! =nil, sets the error message into the span
+func HandleErr(span trace.Span, err error) error {
+	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+	}
+	return err
 }
 
 func enableTraceObservability(cfg *config.Server) bool {

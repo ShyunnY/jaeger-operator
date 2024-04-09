@@ -13,9 +13,7 @@ import (
 func TestTranslateNormal(t *testing.T) {
 
 	irMaps := new(message.InfraIRMaps)
-	translator := Translator{
-		InfraIRMap: irMaps,
-	}
+	translator := Translator{}
 	instance := &jaegerv1a1.Jaeger{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "tracing.orange.io/v1alpha1",
@@ -33,7 +31,7 @@ func TestTranslateNormal(t *testing.T) {
 	infra, err := translator.Translate(instance)
 	assert.NoError(t, err)
 
-	translator.InfraIRMap.Store(instance.Name, infra)
+	assert.NotEmpty(t, infra)
 
 	value, exist := irMaps.Load(instance.Name)
 	assert.True(t, exist)

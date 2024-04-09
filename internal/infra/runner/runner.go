@@ -3,17 +3,19 @@ package runner
 import (
 	"context"
 
-	"github.com/ShyunnY/jaeger-operator/internal/infra"
-	"github.com/ShyunnY/jaeger-operator/internal/jaeger"
-	"github.com/ShyunnY/jaeger-operator/internal/message"
 	"github.com/telepresenceio/watchable"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 	"github.com/ShyunnY/jaeger-operator/internal/config"
 	"github.com/ShyunnY/jaeger-operator/internal/consts"
+	"github.com/ShyunnY/jaeger-operator/internal/infra"
+	"github.com/ShyunnY/jaeger-operator/internal/jaeger"
+	"github.com/ShyunnY/jaeger-operator/internal/message"
+	"github.com/ShyunnY/jaeger-operator/internal/tracing"
 )
 
 type Config struct {
@@ -56,14 +58,20 @@ func (r *Runner) subscriptionInfraResource(ctx context.Context) {
 
 		tracer := otel.GetTracerProvider().Tracer(consts.ReconciliationTracer)
 		ctx, span := tracer.Start(update.Value.Ctx, "infra")
+		span.SetAttributes(
+			attribute.String("runner", jaegerv1a1.InfrastructureComponent),
+			attribute.String("name", update.Value.InstanceMedata.Name),
+			attribute.String("namespace", update.Value.InstanceMedata.Namespace),
+		)
 		defer span.End()
 
 		if update.Delete {
 			// TODO: handler delete
 		}
 
+		// According to infraIR, the corresponding k8s resource is created
 		if err := r.Manager.BuildInfraResources(ctx, update.Value); err != nil {
-			errCh <- err
+			errCh <- tracing.HandleErr(span, err)
 		}
 
 	})

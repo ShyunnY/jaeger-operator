@@ -3,14 +3,16 @@ package runner
 import (
 	"context"
 
-	"github.com/ShyunnY/jaeger-operator/internal/message"
-	"github.com/ShyunnY/jaeger-operator/internal/translate"
 	"github.com/telepresenceio/watchable"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
 	"github.com/ShyunnY/jaeger-operator/internal/config"
 	"github.com/ShyunnY/jaeger-operator/internal/consts"
+	"github.com/ShyunnY/jaeger-operator/internal/message"
+	"github.com/ShyunnY/jaeger-operator/internal/tracing"
+	"github.com/ShyunnY/jaeger-operator/internal/translate"
 )
 
 type Config struct {
@@ -43,7 +45,6 @@ func (r *Runner) Start(ctx context.Context) error {
 
 func (r *Runner) translateResources(ctx context.Context) {
 	translator := translate.Translator{
-		InfraIRMap:  r.Config.InfraIRMap,
 		StatusIRMap: r.Config.StatusIRMap,
 	}
 
@@ -54,21 +55,26 @@ func (r *Runner) translateResources(ctx context.Context) {
 
 			tracer := otel.GetTracerProvider().Tracer(consts.ReconciliationTracer)
 			ctx, span := tracer.Start(update.Value.Ctx, "translate")
+			span.SetAttributes(
+				attribute.String("runner", jaegerv1a1.TranslatorComponent),
+				attribute.String("name", update.Value.Name),
+				attribute.String("namespace", update.Value.Namespace),
+			)
 			defer span.End()
 
 			if update.Delete {
-				// TODO: 跳过资源翻译, 我们删除各个irKey即可
+				// TODO: handler delete
 			}
 
-			// 将资源翻译成infraIR,statusIR等
+			// Jaeger resources were translated into infra IR and statusIR
 			infraIR, err := translator.Translate(update.Value.Jaeger)
 			if err != nil {
-				errCh <- err
+				errCh <- tracing.HandleErr(span, err)
 				return
 			}
 
-			infraIR.Ctx = ctx
 			// push ir
+			infraIR.Ctx = ctx
 			r.InfraIRMap.Store(update.Value.Jaeger.Name, infraIR)
 		},
 	)

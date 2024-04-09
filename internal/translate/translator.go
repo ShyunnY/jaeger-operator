@@ -16,7 +16,6 @@ import (
 type Translator struct {
 	Logger logging.Logger
 
-	InfraIRMap  *message.InfraIRMaps
 	StatusIRMap *message.StatusIRMaps
 }
 
@@ -85,7 +84,6 @@ func (t *Translator) Translate(instance *jaegerv1a1.Jaeger) (*message.InfraIR, e
 		infraIR.AddResources(deploy)
 	}
 
-	// TODO: need to deal with services with different strategy and with multiple Service resources
 	var services []*corev1.Service
 	var err error
 	if services, err = strRender.Service(); err != nil {

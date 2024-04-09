@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/utils/set"
@@ -21,6 +22,7 @@ import (
 	"github.com/ShyunnY/jaeger-operator/internal/consts"
 	"github.com/ShyunnY/jaeger-operator/internal/logging"
 	"github.com/ShyunnY/jaeger-operator/internal/message"
+	"github.com/ShyunnY/jaeger-operator/internal/tracing"
 )
 
 type jaegerReconciler struct {
@@ -59,14 +61,20 @@ func NewJaegerController(cfg config.Server, mgr manager.Manager, jaegerIR *messa
 	return nil
 }
 
-// Reconcile
-// TODO: 与Jaeger CRD有关的修改都放置在reconcile中
-// TODO: 需要处理: 已经有一个jaeger实例, 又传入一个同名的不同配置jaeger, 该怎么处理?
+// Reconcile Coordinate Jaeger resources. Only a few things will be done at the controller level:
+// + Determine whether the Jaeger resource is managed by the current operator
+// + Set default values for Jaeger resources
+// + The Jaeger resources were handed over to the Translator for translation
 func (r *jaegerReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	r.logger.Info("reconcile jaeger object", "instance", req.Name)
 
 	tracer := otel.GetTracerProvider().Tracer(consts.ReconciliationTracer)
 	ctx, span := tracer.Start(ctx, "reconcile")
+	span.SetAttributes(
+		attribute.String("runner", jaegerv1a1.ReconcilerComponent),
+		attribute.String("name", req.Name),
+		attribute.String("namespace", req.Namespace),
+	)
 	defer span.End()
 
 	instance := jaegerv1a1.Jaeger{}
@@ -98,7 +106,7 @@ func (r *jaegerReconciler) Reconcile(ctx context.Context, req reconcile.Request)
 
 	if err := r.client.Update(ctx, &instance); err != nil {
 		r.logger.Error(err, "failed to update the Jaeger", "instance", req.String())
-		return reconcile.Result{}, err
+		return reconcile.Result{}, tracing.HandleErr(span, err)
 	}
 
 	normalizeJaeger(&instance)
