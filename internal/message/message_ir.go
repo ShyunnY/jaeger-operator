@@ -18,7 +18,6 @@ type IRMessage struct {
 }
 
 type InfraIRMaps struct {
-	// key=jaeger name,val=ir
 	watchable.Map[string, *InfraIR]
 }
 

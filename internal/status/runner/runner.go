@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+
 	"github.com/ShyunnY/jaeger-operator/internal/config"
 	"github.com/ShyunnY/jaeger-operator/internal/jaeger"
 	"github.com/ShyunnY/jaeger-operator/internal/message"
@@ -53,15 +54,10 @@ func (r *Runner) Start(ctx context.Context) error {
 }
 
 func (r *Runner) subscribeStatus(ctx context.Context) {
-
 	message.SubscriptionIR(
 		r.StatusIRMap.Map.Subscribe(ctx),
 		func(update watchable.Update[types.NamespacedName, *jaegerv1a1.JaegerStatus], errCh chan error) {
 			r.Logger.Info("status handler takes the ir instance and handler it", "instance", update.Key.String())
-
-			if update.Delete {
-				// TODO: handler error
-			}
 
 			r.UpdateHandler.Write(status.Update{
 				NamespacedName: update.Key,
@@ -80,8 +76,12 @@ func (r *Runner) subscribeStatus(ctx context.Context) {
 				},
 			})
 
+			r.deleteStatusIR(update.Key)
 		})
+}
 
+func (r *Runner) deleteStatusIR(key types.NamespacedName) {
+	r.StatusIRMap.Delete(key)
 }
 
 func sortConditions(conditions []metav1.Condition) []metav1.Condition {

@@ -65,15 +65,16 @@ func (r *Runner) subscriptionInfraResource(ctx context.Context) {
 		)
 		defer span.End()
 
-		if update.Delete {
-			// TODO: handler delete
-		}
-
 		// According to infraIR, the corresponding k8s resource is created
 		if err := r.Manager.BuildInfraResources(ctx, update.Value); err != nil {
 			errCh <- tracing.HandleErr(span, err)
 		}
 
+		r.deleteInfraIR(update.Key)
 	})
 
+}
+
+func (r *Runner) deleteInfraIR(key string) {
+	r.InfraMap.Delete(key)
 }
