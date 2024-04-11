@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/ShyunnY/jaeger-operator/internal/config"
 	"github.com/ShyunnY/jaeger-operator/internal/jaeger"
@@ -75,21 +76,23 @@ func (r *Runner) subscribeStatus(ctx context.Context) {
 					return dp
 				},
 			})
-
-			r.deleteStatusIR(update.Key)
 		})
 }
 
-func (r *Runner) deleteStatusIR(key types.NamespacedName) {
-	r.StatusIRMap.Delete(key)
-}
-
+// sortConditions We sort conditions in reverse order according to their time
 func sortConditions(conditions []metav1.Condition) []metav1.Condition {
-
-	retCond := make([]metav1.Condition, 0, len(conditions))
-	for i := len(conditions) - 1; i >= 0; i-- {
-		retCond = append(retCond, conditions[i])
+	retCond := []metav1.Condition{}
+	for i := range conditions {
+		cond := conditions[i]
+		retCond = append(retCond, cond)
 	}
+
+	sort.SliceStable(retCond, func(a, b int) bool {
+		condA := retCond[a]
+		condB := retCond[b]
+
+		return condA.LastTransitionTime.After(condB.LastTransitionTime.Time)
+	})
 
 	return retCond
 }

@@ -26,7 +26,6 @@ func MergeCondition(conditions []metav1.Condition, updates ...metav1.Condition) 
 	for i, update := range updates {
 		add := true
 		for j, condition := range conditions {
-
 			// Reason represents different components, if the same component publishes the same condition,
 			// we don't need to add additional conditions
 			if condition.Reason == update.Reason {
