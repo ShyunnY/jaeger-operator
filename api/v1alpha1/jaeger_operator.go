@@ -11,6 +11,11 @@ type JaegerOperator struct {
 type JaegerOperatorTelemetry struct {
 	// Metrics Define the metrics configuration in the Jaeger Operator
 	Metrics *JaegerOperatorMetricsSettings `json:"metrics,omitempty"`
+	Logging *JaegerOperatorLoggingSettings `json:"logging,omitempty"`
+}
+
+type JaegerOperatorLoggingSettings struct {
+	Level string `json:"level"`
 }
 
 type JaegerOperatorMetricsSettings struct {
