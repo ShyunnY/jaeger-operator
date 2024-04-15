@@ -17,10 +17,6 @@ import (
 	"github.com/ShyunnY/jaeger-operator/internal/utils"
 )
 
-const (
-	JaegerOperator = "jaeger-operator"
-)
-
 var (
 	logLevel          string
 	namespace         string
@@ -140,8 +136,4 @@ func setRunners(cfg *config.Server) error {
 	cfg.Logger.Info("jaeger operator shutting down")
 
 	return nil
-}
-
-func Name() string {
-	return JaegerOperator
 }
