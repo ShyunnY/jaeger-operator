@@ -26,7 +26,6 @@ var (
 	metricsEndpoint = "/metrics"
 )
 
-// TODO: 需要将controller-runtime中的metrics端点改变到此server上
 func init() {
 	otel.SetLogger(metricLogger.Logger)
 }
@@ -80,21 +79,21 @@ func applyConfig(cfg *config.Server) *Options {
 
 	// we only configure the Sink if it is configured.
 	// otherwise we will not register the otel exporter
-	if cfg.Metric.Sink != nil {
+	if cfg.Observability.Metric.Sink != nil {
 		opts.sink.host = consts.OtelHost
 		opts.sink.port = consts.OtelPort
 		opts.sink.protocol = consts.OtelProtol
 
-		if cfg.Metric != nil && len(cfg.Metric.Sink.Host) != 0 {
-			opts.sink.host = cfg.Metric.Sink.Host
+		if cfg.Observability.Metric != nil && len(cfg.Observability.Metric.Sink.Host) != 0 {
+			opts.sink.host = cfg.Observability.Metric.Sink.Host
 		}
 
-		if cfg.Metric != nil && len(cfg.Metric.Sink.Port) != 0 {
-			opts.sink.port = cfg.Metric.Sink.Port
+		if cfg.Observability.Metric != nil && len(cfg.Observability.Metric.Sink.Port) != 0 {
+			opts.sink.port = cfg.Observability.Metric.Sink.Port
 		}
 
-		if cfg.Metric != nil && len(cfg.Metric.Sink.Protocol) != 0 {
-			opts.sink.protocol = cfg.Metric.Sink.Protocol
+		if cfg.Observability.Metric != nil && len(cfg.Observability.Metric.Sink.Protocol) != 0 {
+			opts.sink.protocol = cfg.Observability.Metric.Sink.Protocol
 		}
 	}
 

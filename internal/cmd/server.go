@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	clientgok8s "k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/ShyunnY/jaeger-operator/internal/config"
@@ -44,11 +45,18 @@ func GetServerCommand() *cobra.Command {
 // server serves jaeger operator
 func server() error {
 
+	clientset, err := clientgok8s.NewForConfig(ctrl.GetConfigOrDie())
+	if err != nil {
+		return err
+	}
+
+	cmInformer := config.New("configMap-informer", clientset.CoreV1().RESTClient(), nil)
+
 	cfg := &config.Server{
 		JaegerOperatorName: consts.OperatorName,
-		Logger:             logging.NewLogger(consts.LogLevel(logLevel)).WithName(Name()),
+		Logger:             logging.NewLogger(consts.LogLevel(logLevel)).WithName(""),
 		NamespaceSet:       utils.ExtractNamespace(namespace),
-		Observability: config.Observability{
+		Observability: config.ObservabilityConfig{
 			Metric: &config.Metrics{},
 			Trace: &config.Traces{
 				Endpoint: &testTraceEndpoint,
@@ -66,6 +74,12 @@ func server() error {
 		return err
 	}
 
+	var errCh chan error
+	metricsCallback := func(cfg *config.Server) {
+		if err := metrics.New(cfg); err != nil {
+			errCh <- err
+		}
+	}
 	// metrics serve
 	if err := metrics.New(cfg); err != nil {
 		return err

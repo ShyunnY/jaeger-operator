@@ -1,11 +1,15 @@
 package config
 
 import (
+	"context"
+	"fmt"
 	"sync"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
 	jaegerv1a1 "github.com/ShyunnY/jaeger-operator/api/v1alpha1"
@@ -23,18 +27,30 @@ var (
 	informerLogger = logging.DefaultLogger()
 )
 
+type CallBacks []func(*Server)
+
 type ServerConfigInformer struct {
 	name  string
 	mutex sync.RWMutex
 
-	callback     func(*Server)
+	started      bool
+	callback     CallBacks
 	informer     cache.SharedInformer
 	registration cache.ResourceEventHandlerRegistration
 }
 
-func New(name string, lw cache.ListerWatcher) *ServerConfigInformer {
+func New(name string, r rest.Interface, cbs CallBacks) *ServerConfigInformer {
+
+	lw := cache.NewListWatchFromClient(
+		r,
+		"configmaps",
+		"",
+		fields.Everything(),
+	)
 	sc := &ServerConfigInformer{
-		name: name,
+		name:     name,
+		callback: cbs,
+		mutex:    sync.RWMutex{},
 		informer: cache.NewSharedInformer(
 			lw,
 			&corev1.ConfigMap{},
@@ -44,9 +60,33 @@ func New(name string, lw cache.ListerWatcher) *ServerConfigInformer {
 	return sc
 }
 
+func (sc *ServerConfigInformer) Start(ctx context.Context) {
+	func() {
+		sc.mutex.Lock()
+		defer sc.mutex.Unlock()
+
+		sc.started = true
+	}()
+
+	var ch chan struct{}
+	go func() {
+		select {
+		case <-ctx.Done():
+			ch <- struct{}{}
+		}
+	}()
+
+	sc.informer.Run(ch)
+	sc.started = false
+}
+
 func (sc *ServerConfigInformer) addHandlers() error {
 	sc.mutex.Lock()
 	defer sc.mutex.Unlock()
+
+	if sc.started {
+		return fmt.Errorf("configMap informer already started")
+	}
 
 	registration, err := sc.informer.AddEventHandler(
 		cache.FilteringResourceEventHandler{
@@ -59,7 +99,6 @@ func (sc *ServerConfigInformer) addHandlers() error {
 					// we don't really care what old Obj is
 					sc.EventHandlerFunc(newObj, false)
 				},
-				// Delete需要将默认的Config设置到Server中.
 				DeleteFunc: func(obj interface{}) {
 					sc.EventHandlerFunc(obj, true)
 				},
@@ -102,7 +141,9 @@ func (sc *ServerConfigInformer) EventHandlerFunc(obj interface{}, isDelete bool)
 		reset = true
 	}
 	server := JaegerOperatorToServer(jaegerOperator, reset)
-	sc.callback(server)
+	for _, cb := range sc.callback {
+		cb(server)
+	}
 }
 
 // convertToJaegerOperator Get the configuration from the ConfigMap and deserialize it with the codec.
